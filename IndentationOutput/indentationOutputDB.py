@@ -6,7 +6,7 @@
 
 from rsg.rsgGui import *
 from abaqusConstants import INTEGER, FLOAT
-dialogBox = RsgDialog(title='Indentation: Output (Axisymmetric Conical Equivalent)', kernelModule='LP_Indentation_Output', kernelFunction='run_plugin_master', includeApplyBtn=True, includeSeparator=True, okBtnText='OK', applyBtnText='Apply', execDir=thisDir)
+dialogBox = RsgDialog(title='Indentation: Output (Axisymmetric Conical Equivalent)', kernelModule='LP_Indentation_Output', kernelFunction='output_plugin_prescript', includeApplyBtn=True, includeSeparator=True, okBtnText='OK', applyBtnText='Apply', execDir=thisDir)
 RsgTabBook(name='TabBook_1', p='DialogBox', layout='0')
 RsgTabItem(name='TabItem_4', p='TabBook_1', text='Output Scripts')
 RsgVerticalFrame(name='VFrame_3', p='TabItem_4', layout='0', pl=10, pr=10, pt=10, pb=10)
@@ -17,7 +17,7 @@ RsgSeparator(p='VFrame_3')
 RsgLabel(p='VFrame_3', text='Output Scripts', useBoldFont=True)
 RsgSeparator(p='VFrame_3')
 RsgHorizontalFrame(name='HFrame_12', p='VFrame_3', layout='0', pl=10, pr=0, pt=0, pb=0)
-RsgIcon(p='HFrame_12', fileName=r'PermaCheck.png')
+RsgIcon(p='HFrame_12', fileName=r'iconPermaCheck.png')
 RsgLabel(p='HFrame_12', text='Force and Work-Energy vs. Displacement', useBoldFont=False)
 RsgHorizontalFrame(name='HFrame_13', p='VFrame_3', layout='0', pl=10, pr=0, pt=0, pb=0)
 RsgVerticalFrame(name='VFrame_10', p='HFrame_13', layout='0', pl=1, pr=0, pt=0, pb=0)

@@ -6,7 +6,7 @@
 
 from rsg.rsgGui import *
 from abaqusConstants import INTEGER, FLOAT
-dialogBox = RsgDialog(title='Indentation: Model (Axisymmetric Conical Equivalent)', kernelModule='LP_Indentation_Model', kernelFunction='run_plugin_master', includeApplyBtn=True, includeSeparator=True, okBtnText='OK', applyBtnText='Apply', execDir=thisDir)
+dialogBox = RsgDialog(title='Indentation: Model (Axisymmetric Conical Equivalent)', kernelModule='LP_Indentation_Model', kernelFunction='input_plugin_prescript', includeApplyBtn=True, includeSeparator=True, okBtnText='OK', applyBtnText='Apply', execDir=thisDir)
 RsgTabBook(name='TabBook_1', p='DialogBox', layout='0')
 RsgTabItem(name='TabItem_1', p='TabBook_1', text='Model Inputs')
 RsgVerticalFrame(name='VFrame_1', p='TabItem_1', layout='0', pl=0, pr=0, pt=0, pb=0)
@@ -39,7 +39,7 @@ RsgTextField(p='VAligner_3', fieldType='Float', ncols=6, labelText='Indenter Dem
 RsgTextField(p='VAligner_3', fieldType='Float', ncols=6, labelText='Indenter Tip Flat (um)', keyword='indFlat', default='0.00')
 RsgTextField(p='VAligner_3', fieldType='Float', ncols=6, labelText='Indenter Tip Radius (um)', keyword='indRadius', default='0.00')
 RsgVerticalFrame(name='VFrame_16', p='HFrame_14', layout='0', pl=20, pr=10, pt=0, pb=0)
-RsgIcon(p='VFrame_16', fileName=r'Indenter_Geometry_Diagram_v2_red.png')
+RsgIcon(p='VFrame_16', fileName=r'icon_Indenter_Geometry_Diagram_v2_red.png')
 RsgSeparator(p='HFrame_14')
 RsgVerticalFrame(name='VFrame_20', p='HFrame_14', layout='0', pl=10, pr=10, pt=0, pb=0)
 RsgVerticalFrame(name='VFrame_9', p='VFrame_20', layout='0', pl=0, pr=10, pt=0, pb=0)
