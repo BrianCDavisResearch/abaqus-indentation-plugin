@@ -111,9 +111,13 @@ def run_output_script(outp):
 
             if outp['boolDensity']:
 
-                # This outputs the density variable ("RD" for standard, "DENSITY" for explicit) on the centerline and surface
-                if outp['indenterOutput'][i].odb.steps[outp['indenterOutput'][i].odb.steps.keys()[0]].procedure.endswith('EXPLICIT'): densityResult = 'DENSITY'
-                else: densityResult = 'RD'
+                if 'RD' in outp['indenterOutput'][i].odb.steps[outp['indenterOutput'][i].odb.steps.keys()[-2]].frames[-1].fieldOutputs.keys():
+                    densityResult = 'RD'
+                elif 'DENSITY' in outp['indenterOutput'][i].odb.steps[outp['indenterOutput'][i].odb.steps.keys()[-2]].frames[-1].fieldOutputs.keys():
+                    densityResult = 'DENSITY'
+                elif 'PEQC4' in outp['indenterOutput'][i].odb.steps[outp['indenterOutput'][i].odb.steps.keys()[-2]].frames[-1].fieldOutputs.keys():
+                    densityResult = 'PEQC4'
+
                 outp['indenterOutput'][i].GeneralResults(sortedResults=True,sortDirection=-2,stepName=outp['indenterOutput'][i].odb.steps.keys()[-2],instanceName='TEST_ARTICLE-1',setName=clSetName, resultName=densityResult, specialLocation=CENTROID, includePE=True, writeCSV=True)
                 outp['indenterOutput'][i].GeneralResults(sortedResults=True,sortDirection=-2,stepName=outp['indenterOutput'][i].odb.steps.keys()[-1],instanceName='TEST_ARTICLE-1',setName=clSetName, resultName=densityResult, specialLocation=CENTROID, includePE=True, writeCSV=True)
                 outp['indenterOutput'][i].GeneralResults(sortedResults=True,sortDirection=1,stepName=outp['indenterOutput'][i].odb.steps.keys()[-2],instanceName='TEST_ARTICLE-1',setName=surfSetName, resultName=densityResult, specialLocation=CENTROID, includePE=True, writeCSV=True)
@@ -172,7 +176,7 @@ def output_plugin_prescript(*args,**kwargs):
     print('\n\nRunning Abaqus Python ODB Plugin...\n')
 
     import os
-    
+
     #-----------------------------------------------------------------------
 
     outp = {}
@@ -199,64 +203,15 @@ def output_plugin_prescript(*args,**kwargs):
     outp['boolAreaPlastic'] = bool(kwargs.get('boolAreaPlastic',False))
     outp['limitPE'] = float(kwargs.get('limitPE',1e-05))
     outp['boolAreaS22'] = bool(kwargs.get('boolAreaS22',False))
-    
+
     #-----------------------------------------------------------------------
 
     run_output_script(outp)
-    
+
     return(0)
 
 #-----------------------------------------------------------------------
 
 # End of Plugin
-
-#-----------------------------------------------------------------------
-
-def main(args):
-
-    outp = {}
-
-    outp['moduleName'] = r'C:\Abaqus\Module_Indentation.py'
-
-    outp['directoryMethod'] = True
-    outp['odbDirectory'] = r'C:\Abaqus\Temp'
-    # outp['odbDirectory'] = r'C:\Abaqus\Mio\TransferInbound'
-
-    outp['odbPath'] = r'C:\Abaqus\Temp\Indentation-Test_01-01.odb'
-
-    #-----------------------------------------------------------------------
-    outp['boolEnergy'] = True
-    outp['boolContVect'] = True
-    outp['boolOrthoStress'] = True
-    outp['boolSurfTop'] = True
-    #-----------------------------------------------------------------------
-    outp['boolIndVol'] = True
-    outp['boolNorm'] = True
-    #-----------------------------------------------------------------------
-    outp['boolDensity'] = True
-    outp['boolInvStress'] = True
-    #-----------------------------------------------------------------------
-    outp['boolAreaInvariants'] = True
-    outp['boolAreaPlastic'] = True
-    outp['boolAreaS22'] = True
-    #-----------------------------------------------------------------------
-
-    outp['limitPE'] = None #Sets the PE limit, currently, just for plugin.
-
-    run_output_script(outp)
-
-    return(0)
-
-#-----------------------------------------------------------------------
-
-#-----------------------------------------------------------------------
-
-if __name__ == "__main__":
-
-    from sys import exit, argv
-
-    # exit(main(argv))
-
-    main(argv)
 
 #-----------------------------------------------------------------------

@@ -228,7 +228,7 @@ def run_input_script(inp):
 
     elif inp['taType'] == 'CsymIndent':
 
-        print("This isn't ready yet!")    
+        print("This isn't ready yet!")
 
     elif inp['taType'] == 'Full3DIndent':
 
@@ -255,6 +255,8 @@ def run_input_script(inp):
     indenter.createJob(inp['jobName'],inp['numCPU'])
 
     if ('biaxialPrestress' in dict(inp)) and not inp['biaxialPrestress'] == 0.0: indenter.createPredefinedField(inp['biaxialPrestress'])
+
+    if inp['csvMethod']: mdb.jobs[inp['jobName']].writeInput(consistencyChecking=OFF)
 
     try: indenter.setView()
     except: print('Warning: Unable to set CAE view settings.')
@@ -380,265 +382,16 @@ def input_plugin_prescript(*args,**kwargs):
     #-----------------------------------------------------------------------
     inp['controlType'] = 'Displacement'
     inp['csvMethod'] = False
-    inp['csvFileNames'] = None
+    inp['csvFileName'] = None
     inp['preSolve'] = False
     #-----------------------------------------------------------------------
 
     run_input_script(inp)
-    
+
     return(0)
-    
+
 #-----------------------------------------------------------------------
 
 # End of Plugin
-
-#-----------------------------------------------------------------------
-
-def input_csv_prescript(inp):
-
-    import os, csv
-
-    os.chdir(r"C:\Abaqus\Mio\TransferOutbound")
-
-    print >> sys.__stdout__, ('\n')
-
-    for fileName in inp['csvFileNames']:
-
-        with open(fileName, 'rb') as tempFile:
-
-            csvReader = csv.reader(tempFile)
-
-            dataKeys = next(csvReader)
-
-            for csvRow in csvReader:
-
-                for i in range(len(dataKeys)):
-
-                    if dataKeys[i] == 'taMatKerm': #Do for other 'multiple' method entries.
-                        
-                        inp['taMatKerm'] = [float(entry) for entry in csvRow[i].lstrip('(').rstrip(')').split(',')]    
-
-                    elif dataKeys[i].startswith('M'):#depricated "M for Multiple" method...  ...maybe by looking for tuples...
-
-                        inp[dataKeys[i].lstrip('M')] = tuple(float(item) for item in csvRow[i].split(','))
-
-                    else:
-
-                        try: inp[dataKeys[i]] = float(csvRow[i])
-                        except: inp[dataKeys[i]] = csvRow[i]
-
-                    print >> sys.__stdout__, ('Data Key: %s; Value: %s'%(dataKeys[i],inp[dataKeys[i]]))
-
-                print >> sys.__stdout__, ('\n')
-
-                run_input_script(inp)
-
-    from subprocess import call
-
-    call(['python', r'C:\Abaqus\WorkingFiles\Mio\Mio_Local_Generate_Slurm_Files_rev2018-09-12a.py'])
-
-    os.chdir(r"C:\Abaqus\Temp")
-
-#-----------------------------------------------------------------------
-
-#-----------------------------------------------------------------------
-
-def main(args):
-
-    #-----------------------------------------------------------------------
-    # try: session.journalOptions.setValues(replayGeometry=COORDINATE, recoverGeometry=COORDINATE)
-    try: session.journalOptions.setValues(replayGeometry=COMPRESSEDINDEX, recoverGeometry=COMPRESSEDINDEX)
-    except: pass
-    #-----------------------------------------------------------------------
-
-    #---------------------------------------------------------------------------------
-    #Setting up input "inp" dictionary and defining module file
-    #---------------------------------------------------------------------------------
-    inp = {}
-    inp['moduleName'] = r'C:\Abaqus\Module_Indentation.py'
-    #---------------------------------------------------------------------------------
-
-    #---------------------------------------------------------------------------------
-    #Analysis Type, Output Frequencies, Step Controls, Solver Cores, Jobname
-    #---------------------------------------------------------------------------------
-    # inp['analysisType'] = 'Standard - Static'
-    # inp['analysisType'] = 'Standard - Quasi-Static'
-    inp['analysisType'] = 'Explicit - Mass Scaling'
-    #---------------------------------------------------------------------------------
-    # inp['stepTime'] = (10.0e3,0.0e3,10.0e3,0.0e3)   #(ms) Step times for Indent, Dwell-Loaded, Remove, Dwell-Unloaded steps (Dwell is ignored for Standard)
-    inp['fieldIntervals'] = 50                      #(Unitless) Integer number of field results #1
-    inp['historyIntervals'] = 50                    #(Unitless) Integer number of history results #50
-    inp['incrementTime'] = 1.0e-00                  #(ms) Target increment time for explicit mass scaling technique
-    inp['numCPU'] = 8                               # Number of parallel CPUs used by solver
-    #---------------------------------------------------------------------------------
-    inp['jobName'] = 'Indentation-Test_01-01'
-    # inp['jobName'] = 'Pillar-Test_01-01'
-    #---------------------------------------------------------------------------------
-
-    #---------------------------------------------------------------------------------
-    #Indenter: Type
-    #---------------------------------------------------------------------------------
-    # inp['indType'] = 'Deformable'
-    inp['indType'] = 'Rigid'
-    #---------------------------------------------------------------------------------
-
-    #---------------------------------------------------------------------------------
-    #Indenter: Geometry (and friction coefficient)
-    #---------------------------------------------------------------------------------
-    inp['indDemiAngle'] = 70.3            #(degrees) Conical Equivalents: 42.3 (Cube-Corner), 56.3 (Middle), 70.3 (Vickers)
-    inp['indRadius'] = 0.000              #(um) 0.0 creates a "Sharp Tip" Indenter (0.3 creates a 300nm radius indenter - "MicroStarTech")
-    inp['indFlat'] = 0.000                #(um) creates a flat point which has a radius into the angled indenter surface
-    # inp['indRadiusFraction'] = 0.00     #(um) 0.0 creates a "Sharp Tip" Indenter (variable defines indenter radius as a fraction of indent depth)
-    #---------------------------------------------------------------------------------
-    inp['contactFriction'] = 0.00              #(unitless)
-    #---------------------------------------------------------------------------------
-
-    #---------------------------------------------------------------------------------
-    #Indenter: Linear-Elastic Material Properties
-    #---------------------------------------------------------------------------------
-    inp['indMatName'] = 'Diamond'                   #Only used for Deformable Indenters; Options: 'Diamond', 'Sapphire', or Other (where you must specify a name and property values)
-    # inp['indMatName'] = 'Sapphire'
-    #---------------------------------------------------------------------------------
-    # inp['indMatName'] = 'Custom'
-    # inp['indMatDens'] = 1.00e-9
-    # inp['indMatYM'] = 1000e3
-    # inp['indMatPR'] = 0.15
-    #---------------------------------------------------------------------------------
-
-    #---------------------------------------------------------------------------------
-    #Test Article: Type
-    #---------------------------------------------------------------------------------
-    inp['taType'] = 'AsymIndent'
-    # inp['taType'] = 'QsymIndent'
-    # inp['taType'] = 'HsymIndent'
-    # inp['taType'] = 'CsymIndent'
-    #---------------------------------------------------------------------------------
-    # inp['taType'] = 'AsymPillar'
-    #---------------------------------------------------------------------------------
-
-    #---------------------------------------------------------------------------------
-    #Test Article: Meshing and Re-Meshing
-    #---------------------------------------------------------------------------------
-    inp['meshDivider'] = 50.0           #Default: 50.0
-    inp['taMeshRefine'] = (1,2)         #For explicit analyses, remeshing parameters: [frequency,meshSweeps] "[1,2]" works for Vickers Equivalent
-    # inp['taMeshRefine'] = (1,20)      #For explicit analyses, remeshing parameters: [frequency,meshSweeps] "[1,20]" works for Cube-Corner Equivalent
-    # inp['taMeshRefine'] = (1,20)         #For explicit analyses, remeshing parameters: [frequency,meshSweeps] "[1,20]" works for the Pillar (must be on remove too!)
-    #---------------------------------------------------------------------------------
-
-    #---------------------------------------------------------------------------------
-    #Boundary Condition (i.e. Work Input Controls)
-    #---------------------------------------------------------------------------------
-    inp['controlType'] = 'Displacement'
-    inp['indenterDepth'] = 1.580                #(um) Default: 3.000, Pillar Default: 1.000
-    #---------------------------------------------------------------------------------
-    # inp['controlType'] = 'Force'
-    # inp['indenterForce'] = 1e6                #(uN)
-    #---------------------------------------------------------------------------------
-    # inp['biaxialPrestress'] = 100.0           #(MPa)
-    #---------------------------------------------------------------------------------
-
-    #---------------------------------------------------------------------------------
-    #Test Article: Linear-Elastic Material Properties
-    #---------------------------------------------------------------------------------
-    #Test Material: Amorphous Si02 (Fused Silica)
-    inp['taMatName'] = 'a-SiO2'
-    #---------------------------------------------------------------------------------
-    #Elastic Properties and Density from: (Rouxel, Yoshida, 2017)
-    inp['taMatYM'] = 70.0e3           #Young's Modulus (MPa)
-    inp['taMatPR'] = 0.15             #Poisson's Ratio (Unitless)
-    inp['taMatDens'] = 2.20e-9        #Density (mg/um^3) or (kg/m^3 * 10^-12) or (g/cm^3 * 10^-9)
-    #---------------------------------------------------------------------------------
-
-    #---------------------------------------------------------------------------------
-    #Test Article: Plastic Material Model and Parameters
-    #---------------------------------------------------------------------------------
-    # inp['taMatPlast'] = 'vonMises'
-    inp['taMatPlast'] = 'GTN-pmp'         #'Gurson-Tvergaard-Needleman Porous Metal Plasticity'
-    # inp['taMatPlast'] = 'DP-Cap'          #'Drucker-Prager Cap wHardening'
-    # inp['taMatPlast'] = 'Kerm2008'        #'Elliptical (Kermouche,2008)'
-    # inp['taMatPlast'] = 'Moln2017'        #'Drucker-Prager-Cap (Molnar,2017)'
-    #---------------------------------------------------------------------------------
-
-    #---------------------------------------------------------------------------------
-    #Fortran Subroutine Inputs for 'Elliptical (Kermouche,2008)' and 'Drucker-Prager-Cap (Molnar,2017)' Material
-    inp['taMatKerm'] = (6500.0, -11500.0, 100000.0)
-    inp['taMatMoln'] = (5.0, 5700.0, 5000.0, -3000.0, -0.196, 3.0, 4.0, -20000.0, 7000.0)
-    #---------------------------------------------------------------------------------
-
-    #---------------------------------------------------------------------------------
-    #"DP-Cap" Material: Drucker-Prager Cap w/Hardening Parameters
-    #---------------------------------------------------------------------------------
-
-    # #------------------------fitting Kermouche 2008-----------------------------------
-    # inp['taMatDPCap'] = (6500.0, 0.001, 1.75, 0.0, 0.05, 1.0)
-    # inp['taMatDPCapHard'] = ((5600.0, 0.0),(8000.0, 0.005),(9800.0, 0.0123),(12000.0, 0.0427),(13600.0, 0.0735),(14600.0, 0.117),(15500.0, 0.135),(18100.0, 0.1655),(20000.0, 0.188),(25000.0, 0.195),(50000.0, 0.196)) #Hardening from Molnar 2017, Rouxel 2008, and Deschamps 2013
-    # #---------------------------------------------------------------------------------
-
-    # #------------------------fitting Molnar 2017--------------------------------------
-    # inp['taMatDPCap'] = (5300.0, 12.0, 1.05, 0.0, 0.05, 1.0)
-    # inp['taMatDPCapHard'] = ((5000.0, 0.0),(8000.0, 0.005),(9800.0, 0.0123),(12000.0, 0.0427),(13600.0, 0.0735),(14600.0, 0.117),(15500.0, 0.135),(18100.0, 0.1655),(20000.0, 0.188),(25000.0, 0.195),(50000.0, 0.196)) #Hardening from Molnar 2017, Rouxel 2008, and Deschamps 2013
-    # #---------------------------------------------------------------------------------
-
-    #------------------------fitting Molnar 2017 (again)------------------------------
-    inp['taMatDPCap'] =  (5500.0, 10.0, 0.85, 0.0, 0.01, 1.0)
-    inp['taMatDPCapHard'] = ((4750.0, 0.0),(8000.0, 0.005),(9800.0, 0.0123),(12000.0, 0.0427),(13600.0, 0.0735),(14600.0, 0.117),(15500.0, 0.135),(18100.0, 0.1655),(20000.0, 0.188),(25000.0, 0.195),(50000.0, 0.196)) #Hardening from Molnar 2017, Rouxel 2008, and Deschamps 2013
-    #---------------------------------------------------------------------------------
-
-    #---------------------------------------------------------------------------------
-    #"GTN-pmp" Material: Yield strength and Gurson-Tvegaard-Needlemean Parameters
-    #---------------------------------------------------------------------------------
-
-    #------------------------fitting Kermouche 2008-----------------------------------
-    inp['taMatYSmin'] = 7.50e3                  #Yield Strength (MPa)
-    inp['taMatGTNrd'] = 0.85                    #Relative Density (Unitless) 0.0 < RD <= 1.0 (if RD=1.0 then it's Von Mises) #These values fit the initial Molnar yield surface
-    inp['taMatGTNq'] = (0.90,0.90,0.90**2.0)    #q-Parameters (Unitless) these are scaling factors: q1,q2,q3 (the proper value for q3 is q3 = q1**2.0) #These values fit the initial Molnar yield surface
-    #---------------------------------------------------------------------------------
-
-    # #------------------------fitting Molnar 2017-----------Force vs. Depth doesn't match on this one---------------------------
-    # inp['taMatYSmin'] = 7.50e3                    #(MPa)
-    # inp['taMatGTNrd'] = 0.80               #(Unitless) 0.0 < RD <= 1.0 (if RD=1.0 then it's Von Mises) #These values fit the initial Molnar yield surface
-    # inp['taMatGTNq'] = [1.40,1.10,1.40**2.0]     #(Unitless) these are scaling factors: q1,q2,q3 (the proper value for q3 is q3 = q1**2.0) #These values fit the initial Molnar yield surface
-    # #---------------------------------------------------------------------------------
-
-    # #------------------------fitting Molnar 2017--------------------------------------
-    # inp['taMatYSmin'] = 8.75e3                    #(MPa)
-    # inp['taMatGTNrd'] = 0.95               #(Unitless) 0.0 < RD <= 1.0 (if RD=1.0 then it's Von Mises) #These values fit the initial Molnar yield surface
-    # inp['taMatGTNq'] = [7.50,1.10,7.50**2.0]     #(Unitless) these are scaling factors: q1,q2,q3 (the proper value for q3 is q3 = q1**2.0) #These values fit the initial Molnar yield surface
-    # #---------------------------------------------------------------------------------
-
-    #---------------------------------------------------------------------------------
-    #CSV File Section (activate for parametric studies which read inputs from CSV files)
-    #Don't do two csv files at once, it causes errors in variable overwriting.
-    #---------------------------------------------------------------------------------
-    inp['csvMethod'] = False
-    inp['preSolve'] = False
-    inp['csvFileNames'] = []
-    #---------------------------------------------------------------------------------
-
-    #---------------------------------------------------------------------------------
-    inp['csvFileNames'].append(r'C:\Abaqus\WorkingFiles\csvInputDecks\A_Test_Junk.csv')
-    #---------------------------------------------------------------------------------
-
-    #---------------------------------------------------------------------------------
-    # inp['csvFileNames'].append(r'C:\Abaqus\WorkingFiles\csvInputDecks\pub01b_BuiltInMat_2019-11-26a.csv')
-    #---------------------------------------------------------------------------------
-
-    #---------------------------------------------------------------------------------
-    #Calls the functions which build the FEA model
-    #---------------------------------------------------------------------------------
-    if inp['csvMethod']: input_csv_prescript(inp)
-    else: run_input_script(inp)
-
-    return(0)
-
-#-----------------------------------------------------------------------
-
-if __name__ == "__main__":
-
-    from sys import exit, argv
-
-    # exit(main(argv))
-
-    main(argv)
 
 #-----------------------------------------------------------------------
