@@ -6,9 +6,9 @@ thisDir = os.path.dirname(thisPath)
 
 toolset = getAFXApp().getAFXMainWindow().getPluginToolset()
 toolset.registerGuiMenuButton(
-    buttonText='Indentation: Model (pre-processor)', 
-    object=Activator(os.path.join(thisDir, 'indentationModelDB.py')),
-    kernelInitString='import LP_Indentation_Model',
+    buttonText='Sharp Indentation: Results (post-processing)', 
+    object=Activator(os.path.join(thisDir, 'sharpIndentationResultsDB.py')),
+    kernelInitString='import LP_Indentation_Results',
     messageId=AFXMode.ID_ACTIVATE,
     icon=None,
     applicableModules=ALL,

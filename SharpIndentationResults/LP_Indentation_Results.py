@@ -2,7 +2,7 @@
 
 def run_output_script(outp):
 
-    print('\n\nRunning Abaqus Python ODB Script...\n')
+    print('\n\nRunning Abaqus Python Script: Sharp Indentation Output...\n')
 
     #-----------------------------------------------------------------------
     #Loading modules
@@ -117,11 +117,15 @@ def run_output_script(outp):
                     densityResult = 'DENSITY'
                 elif 'PEQC4' in outp['indenterOutput'][i].odb.steps[outp['indenterOutput'][i].odb.steps.keys()[-2]].frames[-1].fieldOutputs.keys():
                     densityResult = 'PEQC4'
+                else:
+                    densityResult = None
 
-                outp['indenterOutput'][i].GeneralResults(sortedResults=True,sortDirection=-2,stepName=outp['indenterOutput'][i].odb.steps.keys()[-2],instanceName='TEST_ARTICLE-1',setName=clSetName, resultName=densityResult, specialLocation=CENTROID, includePE=True, writeCSV=True)
-                outp['indenterOutput'][i].GeneralResults(sortedResults=True,sortDirection=-2,stepName=outp['indenterOutput'][i].odb.steps.keys()[-1],instanceName='TEST_ARTICLE-1',setName=clSetName, resultName=densityResult, specialLocation=CENTROID, includePE=True, writeCSV=True)
-                outp['indenterOutput'][i].GeneralResults(sortedResults=True,sortDirection=1,stepName=outp['indenterOutput'][i].odb.steps.keys()[-2],instanceName='TEST_ARTICLE-1',setName=surfSetName, resultName=densityResult, specialLocation=CENTROID, includePE=True, writeCSV=True)
-                outp['indenterOutput'][i].GeneralResults(sortedResults=True,sortDirection=1,stepName=outp['indenterOutput'][i].odb.steps.keys()[-1],instanceName='TEST_ARTICLE-1',setName=surfSetName, resultName=densityResult, specialLocation=CENTROID, includePE=True, writeCSV=True)
+                if densityResult is not None:
+
+                    outp['indenterOutput'][i].DensityGeneralResults(sortedResults=True,sortDirection=-2,stepName=outp['indenterOutput'][i].odb.steps.keys()[-2],instanceName='TEST_ARTICLE-1',setName=clSetName, resultName=densityResult, specialLocation=CENTROID, includePE=True, writeCSV=True)
+                    outp['indenterOutput'][i].DensityGeneralResults(sortedResults=True,sortDirection=-2,stepName=outp['indenterOutput'][i].odb.steps.keys()[-1],instanceName='TEST_ARTICLE-1',setName=clSetName, resultName=densityResult, specialLocation=CENTROID, includePE=True, writeCSV=True)
+                    outp['indenterOutput'][i].DensityGeneralResults(sortedResults=True,sortDirection=1,stepName=outp['indenterOutput'][i].odb.steps.keys()[-2],instanceName='TEST_ARTICLE-1',setName=surfSetName, resultName=densityResult, specialLocation=CENTROID, includePE=True, writeCSV=True)
+                    outp['indenterOutput'][i].DensityGeneralResults(sortedResults=True,sortDirection=1,stepName=outp['indenterOutput'][i].odb.steps.keys()[-1],instanceName='TEST_ARTICLE-1',setName=surfSetName, resultName=densityResult, specialLocation=CENTROID, includePE=True, writeCSV=True)
 
             if outp['boolInvStress']:
 
@@ -171,17 +175,19 @@ def run_output_script(outp):
 
 #-----------------------------------------------------------------------
 
-def output_plugin_prescript(*args,**kwargs):
+def output_rsg_plugin_prescript(*args,**kwargs):
 
-    print('\n\nRunning Abaqus Python ODB Plugin...\n')
+    print('\n\nRunning Abaqus RSG Plugin: Sharp Indentation Output...\n')
 
     import os
+
+    from abaqus import session
 
     #-----------------------------------------------------------------------
 
     outp = {}
 
-    outp['moduleName'] = '%s\\abaqus_plugins\\IndentationOutput\\Module_Indentation.py' %(os.path.expanduser('~'))
+    outp['moduleName'] = '%s\\abaqus_plugins\\SharpIndentation\\Module_AbaqusFEA_Indentation.py' %(os.path.expanduser('~'))
 
     outp['directoryMethod'] = bool(kwargs.get('directoryMethod',False))
     outp['odbDirectory'] = str(kwargs.get('odbDirectory',r'C:\Abaqus\Temp'))
@@ -204,9 +210,16 @@ def output_plugin_prescript(*args,**kwargs):
     outp['limitPE'] = float(kwargs.get('limitPE',1e-05))
     outp['boolAreaS22'] = bool(kwargs.get('boolAreaS22',False))
 
+    closeODBool = str(kwargs.get('closeODBool',False))
+
     #-----------------------------------------------------------------------
 
     run_output_script(outp)
+
+    if closeODBool:
+
+        try: session.odbs[outp['odbPath'][-1]].close()
+        except: print('Failed to close odb file: %s'%(outp['odbPath'][-1]))
 
     return(0)
 
@@ -215,3 +228,61 @@ def output_plugin_prescript(*args,**kwargs):
 # End of Plugin
 
 #-----------------------------------------------------------------------
+
+def main(*args,**kwargs):
+
+    outp = {}
+
+    outp['moduleName'] = r'C:\Abaqus\Module_AbaqusFEA_Indentation.py'
+
+    #-----------------------------------------------------------------------
+    # Directory or Individual File: comment out all directories to run on individual file
+    #-----------------------------------------------------------------------
+    outp['odbDirectory'] = r'C:\Abaqus\Temp'
+    # outp['odbDirectory'] = r'C:\Abaqus\Mio\TransferInbound'
+    #-----------------------------------------------------------------------
+    # outp['odbPath'] = r'C:\Abaqus\Temp\Indentation-Test_01-01.odb'
+    #-----------------------------------------------------------------------
+
+    #-----------------------------------------------------------------------
+    outp['boolEnergy'] = True
+    outp['boolContVect'] = True
+    outp['boolOrthoStress'] = True
+    outp['boolSurfTop'] = True
+    #-----------------------------------------------------------------------
+    outp['boolIndVol'] = True
+    outp['boolNorm'] = True
+    #-----------------------------------------------------------------------
+    outp['boolDensity'] = True
+    outp['boolInvStress'] = True
+    #-----------------------------------------------------------------------
+    outp['boolAreaInvariants'] = False
+    outp['boolAreaPlastic'] = False
+    outp['boolAreaS22'] = False
+    #-----------------------------------------------------------------------
+
+    outp['limitPE'] = None #Sets the PE limit, currently, just for plugin.
+
+    if 'odbDirectory' in outp.keys():
+
+        outp['directoryMethod'] = True
+
+    else:
+
+        outp['directoryMethod'] = False
+
+        outp['odbDirectory'] = None
+
+    run_output_script(outp)
+
+    return(0)
+
+#-----------------------------------------------------------------------
+
+#-----------------------------------------------------------------------
+
+if __name__ == "__main__":
+
+    from sys import exit, argv
+
+    main(argv)

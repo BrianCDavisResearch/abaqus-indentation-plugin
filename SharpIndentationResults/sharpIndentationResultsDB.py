@@ -6,7 +6,7 @@
 
 from rsg.rsgGui import *
 from abaqusConstants import INTEGER, FLOAT
-dialogBox = RsgDialog(title='Indentation: Output (Axisymmetric Conical Equivalent)', kernelModule='LP_Indentation_Output', kernelFunction='output_plugin_prescript', includeApplyBtn=True, includeSeparator=True, okBtnText='OK', applyBtnText='Apply', execDir=thisDir)
+dialogBox = RsgDialog(title='Sharp Indentation: Results (Axisymmetric Conical Equivalent)', kernelModule='LP_Indentation_Results', kernelFunction='output_rsg_plugin_prescript', includeApplyBtn=True, includeSeparator=True, okBtnText='OK', applyBtnText='Apply', execDir=thisDir)
 RsgTabBook(name='TabBook_1', p='DialogBox', layout='0')
 RsgTabItem(name='TabItem_4', p='TabBook_1', text='Output Scripts')
 RsgVerticalFrame(name='VFrame_3', p='TabItem_4', layout='0', pl=10, pr=10, pt=10, pb=10)
