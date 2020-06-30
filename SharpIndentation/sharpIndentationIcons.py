@@ -1,3 +1,11 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# Copyright 2020 Brian C. Davis
+#
+#-----------------------------------------------------------------------
+
+# Icons for the Sharp Indentation Plugin
 
 iconSharpIndentationModel = [
 "24 24 3 1",

@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#--------------------------------------------------------------------------------------------------
+# Copyright 2020 Brian C. Davis
 #--------------------------------------------------------------------------------------------------
 
 from abaqusConstants import *
@@ -11,8 +15,6 @@ class General_Analysis(object):
     def __init__(self):
 
         return(None)
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
@@ -32,12 +34,16 @@ class General_Analysis(object):
 
             if self.matIndName == 'Diamond':
 
-                self.matIndEYM = 1220e3
+                # self.matIndEYM = 1220e3
+                # self.matIndEPR = 0.20
+                self.matIndEYM = 1050e3
                 self.matIndEPR = 0.20
                 self.matIndDensity = 3.52e-9
 
             elif self.matIndName == 'Sapphire':
 
+                # self.matIndEYM = 460e3
+                # self.matIndEPR = 0.30
                 self.matIndEYM = 345e3
                 self.matIndEPR = 0.29
                 self.matIndDensity = 3.98e-9
@@ -70,8 +76,6 @@ class General_Analysis(object):
         self.mdb.models['Model-1'].HomogeneousSolidSection(name='Elastic_'+self.matTaName, material='Elastic_'+self.matTaName, thickness=None)
 
         return(self.matIndName,self.matIndEYM,self.matIndEPR,self.matIndDensity)
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
@@ -120,6 +124,16 @@ class General_Analysis(object):
             self.mdb.models['Model-1'].materials[self.matTaPsModel+'_'+self.matTaName].CapPlasticity(table=(self.matTaPsDPCap, ))
             self.mdb.models['Model-1'].materials[self.matTaPsModel+'_'+self.matTaName].capPlasticity.CapHardening(table=self.matTaPsDPCapHard)
 
+        elif self.matTaPsModel == 'Drucker-Prager Cap wHardening (Bruns,2020)' or self.matTaPsModel == 'Bruns2020':
+
+            self.tamatPlast = 'Bruns2020'
+
+            self.mdb.models['Model-1'].Material(name=self.matTaPsModel+'_'+self.matTaName)
+            self.mdb.models['Model-1'].materials[self.matTaPsModel+'_'+self.matTaName].Elastic(table=((self.matTaEYM, self.matTaEPR), ))
+            self.mdb.models['Model-1'].materials[self.matTaPsModel+'_'+self.matTaName].Density(table=((self.matTaDensity, ), ))
+            self.mdb.models['Model-1'].materials[self.matTaPsModel+'_'+self.matTaName].CapPlasticity(table=(self.matTaPsDPCap, ))
+            self.mdb.models['Model-1'].materials[self.matTaPsModel+'_'+self.matTaName].capPlasticity.CapHardening(table=self.matTaPsDPCapHard)
+
         elif self.matTaPsModel == 'Elliptical (Kermouche,2008)' or self.matTaPsModel == 'Kerm2008':
 
             self.matTaPsModel = 'Kerm2008'
@@ -154,8 +168,6 @@ class General_Analysis(object):
                 # # self.mdb.models['Model-1'].HomogeneousSolidSection(name='PostYield_' + self.matTaNameIter.rstrip('Material'), material='PostYield_' + self.matTaNameIter , thickness=None)
 
         return(0)
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
@@ -222,7 +234,7 @@ class General_Analysis(object):
 
             if self.anJobName.endswith('_pre'):
 
-                print('Here!')
+                print('"Pre-test" option selected.')
 
                 del self.mdb.models['Model-1'].fieldOutputRequests['F-Output-1']
                 self.mdb.models['Model-1'].historyOutputRequests['H-Output-1'].setValues(numIntervals=self.outpHistInt)
@@ -398,8 +410,6 @@ class General_Analysis(object):
 
     #-----------------------------------------------------------------------
 
-    #-----------------------------------------------------------------------
-
     def createRemeshing(self,*args,**kwargs):
 
         self.remeshingParameters = kwargs.get('remeshingParameters',[1,2])
@@ -426,8 +436,6 @@ class General_Analysis(object):
                 self.mdb.models['Model-1'].steps['Unloading'].adaptiveMeshDomains['Unloading'].setValues(frequency=self.remeshingParameters[0], meshSweeps=self.remeshingParameters[1])
 
         return(0)
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
@@ -476,8 +484,6 @@ class General_Analysis(object):
 
     #-----------------------------------------------------------------------
 
-    #-----------------------------------------------------------------------
-
     def createJob(self,*args,**kwargs):
 
         self.jobname = args[0]
@@ -515,8 +521,6 @@ class General_Analysis(object):
 
     #-----------------------------------------------------------------------
 
-    #-----------------------------------------------------------------------
-
     def setView(self,*args,**kwargs):
 
         from abaqus import session
@@ -534,12 +538,11 @@ class General_Analysis(object):
 
     #-----------------------------------------------------------------------
 
-    #-----------------------------------------------------------------------
-
     def expectedDepthForce(self,*args,**kwargs):
 
         self.anJobName = args[0]
         self.indenterForce = args[1]
+        self.anCSV = args[2]
 
         import sys
 
@@ -549,19 +552,31 @@ class General_Analysis(object):
 
         print >> sys.__stdout__, ('Predicting Indenter Depth for Force (%s) in Job (%s)...' %(self.indenterForce,self.anJobName))
 
-        call([r'C:\SIMULIA\Commands\abaqus.bat','python',r'C:\Abaqus\WorkingFiles\Mio\Mio_Local_RF_Output_rev2019-03-28a.py',self.anJobName,self.anType])
+        if self.anCSV:
 
-        if self.anType.startswith('Standard'):
+            if self.anType.startswith('Standard'):
 
-            anCSVname = r'C:\Abaqus\Mio\TransferOutbound' + '\\' + self.anJobName + '_pre_RF_Work' + '_Base' + '.csv'
+                resCSVname = r'C:\Abaqus\Mio\TransferOutbound' + '\\' + self.anJobName + '_pre_upg_RF_Work_Base.csv'
 
-        elif self.anType.startswith('Explicit'):
+            elif self.anType.startswith('Explicit'):
 
-            anCSVname = r'C:\Abaqus\Mio\TransferOutbound' + '\\' + self.anJobName + '_pre_RF_Work' + '_Ind' + '.csv'
+                resCSVname = r'C:\Abaqus\Mio\TransferOutbound' + '\\' + self.anJobName + '_pre_upg_RF_Work_Ind.csv'
+
+        else:
+
+            call([r'C:\SIMULIA\Commands\abaqus.bat','python',r'C:\Abaqus\LP_Indentation_Results.py'])
+
+            if self.anType.startswith('Standard'):
+
+                resCSVname = r'C:\Abaqus\Temp' + '\\' + self.anJobName + '_pre_RF_Work_Base.csv'
+
+            elif self.anType.startswith('Explicit'):
+
+                resCSVname = r'C:\Abaqus\Temp' + '\\' + self.anJobName + '_pre_RF_Work_Ind.csv'
 
         import csv
 
-        with open(anCSVname, 'rb') as tempFile:
+        with open(resCSVname, 'rb') as tempFile:
 
             tempReader = csv.reader(tempFile)
 
@@ -590,9 +605,7 @@ class General_Analysis(object):
 
     #-----------------------------------------------------------------------
 
-    #-----------------------------------------------------------------------
-
-    def expectedDepthEnergy(self,*args,**kwargs): #This function is in-work, hasn't been fully tested yet!
+    def expectedDepthEnergy(self,*args,**kwargs): #This function is in-work, hasn't been fully tested yet.
 
         self.anJobName = args[0]
         self.inputEnergy = args[1]
@@ -605,13 +618,13 @@ class General_Analysis(object):
 
         print >> sys.__stdout__, ('Predicting Indenter Depth for Energy (%s) in Job (%s)...' %(self.inputEnergy,self.anJobName))
 
-        call([r'C:\SIMULIA\Commands\abaqus.bat','python',r'C:\Abaqus\WorkingFiles\Mio\Mio_Local_RF_Output_rev2018-11-21a.py',self.anJobName])
+        # call([r'C:\SIMULIA\Commands\abaqus.bat','python',r'C:\Abaqus\WorkingFiles\Mio\Mio_Local_RF_Output_rev2018-11-21a.py',self.anJobName])
 
-        anCSVname = r'C:\Abaqus\Mio\TransferOutbound' + '\\' + self.anJobName + '_pre_RF_Work' + '_Ind' + '.csv'
+        resCSVname = r'C:\Abaqus\Mio\TransferOutbound' + '\\' + self.anJobName + '_pre_RF_Work' + '_Ind' + '.csv'
 
         import csv
 
-        with open(anCSVname, 'rb') as tempFile:
+        with open(resCSVname, 'rb') as tempFile:
 
             tempReader = csv.reader(tempFile)
 
@@ -649,8 +662,6 @@ class ASym_Analysis(General_Analysis):
     def __init__(self,*args,**kwargs):
 
         return(None)
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
@@ -763,8 +774,6 @@ class ASym_Analysis(General_Analysis):
         else: raise ValueError('Analysis type chosen is not valid.')
 
         return(0)
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
@@ -903,8 +912,6 @@ class ASym_Indenter_Analysis(ASym_Analysis):
         self.mdb = Mdb()
 
         return(None)
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
@@ -1148,6 +1155,223 @@ class ASym_Indenter_Analysis(ASym_Analysis):
 
     #-----------------------------------------------------------------------
 
+    def createAlternateCylindricalTestArticle(self,*args,**kwargs):
+
+        self.taL = args[0]
+        self.taH = args[1]
+        self.articlePart = args[2]
+        self.meshSize = args[3]
+        self.meshMultiples = args[4]
+        self.meshAspectRatio = args[5]
+
+        meshSize0 = self.meshSize
+        meshSize1 = meshSize0 * self.meshMultiples[0]
+        meshSize2 = meshSize1 * self.meshMultiples[1]
+        meshSize3 = meshSize2 * self.meshMultiples[2]
+        meshSize4 = meshSize3 * self.meshMultiples[3]
+
+        from caeModules import part
+
+        s = self.mdb.models['Model-1'].ConstrainedSketch(name='__profile__', sheetSize=1.0)
+        g, v, d, c = s.geometry, s.vertices, s.dimensions, s.constraints
+        s.setPrimaryObject(option=STANDALONE)
+        s.rectangle(point1=(0.0, 0.0), point2=(self.taL, -self.taH))
+        self.mdb.models['Model-1'].sketches.changeKey(fromName='__profile__', toName='Cylindrical_Test_Article_Sketch')
+        s.unsetPrimaryObject()
+
+        s1 = self.mdb.models['Model-1'].ConstrainedSketch(name='__profile__', sheetSize=1.0)
+        g, v, d, c = s1.geometry, s1.vertices, s1.dimensions, s1.constraints
+        s1.sketchOptions.setValues(viewStyle=AXISYM)
+        s1.setPrimaryObject(option=STANDALONE)
+        s1.ConstructionLine(point1=(0.0, -0.5), point2=(0.0, 0.5))
+        s1.retrieveSketch(sketch=self.mdb.models['Model-1'].sketches['Cylindrical_Test_Article_Sketch'])
+
+        p = self.mdb.models['Model-1'].Part(name='Test_Article', dimensionality=AXISYMMETRIC, type=DEFORMABLE_BODY)
+        p = self.mdb.models['Model-1'].parts['Test_Article']
+        p.BaseShell(sketch=s1)
+        s1.unsetPrimaryObject()
+        p = self.mdb.models['Model-1'].parts['Test_Article']
+        del self.mdb.models['Model-1'].sketches['__profile__']
+
+        p = self.mdb.models['Model-1'].parts['Test_Article']
+        faces = p.faces.findAt(((0.0,0.0,0.0),))
+        p.Set(faces=faces, name='Set-1')
+        p.Set(faces=faces, name='Mat_Elastic_Set')
+        edges = p.edges.findAt(((0.0,-5e-6,0.0),))
+        p.Set(edges=edges, name='Center-Line_Set')
+        edges = p.edges.findAt(((5e-6,0.0,0.0),))
+        p.Set(edges=edges, name='Top_Set')
+        p.Surface(side1Edges=edges, name='Slave_Contact_Surf')
+        edges = p.edges.findAt(((5e-6,-self.taH,0.0),))
+        p.Set(edges=edges, name='Base_Set')
+        edges = p.edges.findAt(((self.taL,-5e-6,0.0),))
+        p.Surface(side1Edges=edges, name='OD_Surf')
+
+        from caeModules import mesh
+
+        if self.anType.startswith('Standard'):
+
+            elemType1 = mesh.ElemType(elemCode=CAX4, elemLibrary=STANDARD, secondOrderAccuracy=OFF, hourglassControl=DEFAULT, distortionControl=DEFAULT)
+            elemType2 = mesh.ElemType(elemCode=CAX3, elemLibrary=STANDARD)
+
+        elif self.anType.startswith('Explicit'):
+
+            elemType1 = mesh.ElemType(elemCode=CAX4R, elemLibrary=EXPLICIT, secondOrderAccuracy=OFF, hourglassControl=DEFAULT, distortionControl=DEFAULT)
+            elemType2 = mesh.ElemType(elemCode=CAX3, elemLibrary=EXPLICIT, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+
+        else: raise ValueError('Analysis type chosen is not valid.')
+
+        p = self.mdb.models['Model-1'].parts['Test_Article']
+        # faces = p.faces.getSequenceFromMask(mask=('[#ffff ]', ), )
+        faces = p.faces.findAt(((5e-6,-5e-6,0.0),))
+        pickedRegions =(faces, )
+        try: p.setElementType(regions=pickedRegions, elemTypes=(elemType1, elemType2))
+        except: p.setElementType(regions=pickedRegions, elemTypes=(elemType1, ))
+
+        p = self.mdb.models['Model-1'].parts['Test_Article']
+        p.seedPart(size=meshSize1, deviationFactor=0.1, minSizeFactor=0.1)
+
+        pickedRegions = p.faces.findAt(((5e-6,-5e-6,0.0),))
+        p.setMeshControls(regions=pickedRegions, elemShape=QUAD, technique=FREE, algorithm=MEDIAL_AXIS, minTransition=OFF)
+        # p.setMeshControls(regions=pickedRegions, elemShape=QUAD_DOMINATED, technique=FREE, algorithm=MEDIAL_AXIS)
+
+        p = self.mdb.models['Model-1'].parts['Test_Article']
+        f, e, d1 = p.faces, p.edges, p.datums
+        t = p.MakeSketchTransform(sketchPlane=f[0], sketchPlaneSide=SIDE1, origin=(0.0, 0.0, 0.0))
+        s = self.mdb.models['Model-1'].ConstrainedSketch(name='__profile__', sheetSize=0.5,gridSpacing=0.01, transform=t)
+        g, v, d, c = s.geometry, s.vertices, s.dimensions, s.constraints
+        s.setPrimaryObject(option=SUPERIMPOSE)
+        p = self.mdb.models['Model-1'].parts['Test_Article']
+        p.projectReferencesOntoSketch(sketch=s, filter=COPLANAR_EDGES)
+        s.Line(point1=(self.articlePart[3]*self.taL, 0.0), point2=(self.articlePart[3]*self.taL, -self.taH))
+        s.Line(point1=(0.0, -self.articlePart[3]*self.taH), point2=(self.taL, -self.articlePart[3]*self.taH))
+        p = self.mdb.models['Model-1'].parts['Test_Article']
+        f = p.faces
+        pickedFaces = p.faces.findAt(((5e-6,-5e-6,0.0),))
+        e1, d2 = p.edges, p.datums
+        p.PartitionFaceBySketch(faces=pickedFaces, sketch=s)
+        s.unsetPrimaryObject()
+        del self.mdb.models['Model-1'].sketches['__profile__']
+
+        p = self.mdb.models['Model-1'].parts['Test_Article']
+        f, e, d1 = p.faces, p.edges, p.datums
+        t = p.MakeSketchTransform(sketchPlane=f[0], sketchPlaneSide=SIDE1, origin=(0.0, 0.0, 0.0))
+        s = self.mdb.models['Model-1'].ConstrainedSketch(name='__profile__', sheetSize=0.5,gridSpacing=0.01, transform=t)
+        g, v, d, c = s.geometry, s.vertices, s.dimensions, s.constraints
+        s.setPrimaryObject(option=SUPERIMPOSE)
+        p = self.mdb.models['Model-1'].parts['Test_Article']
+        p.projectReferencesOntoSketch(sketch=s, filter=COPLANAR_EDGES)
+        s.Line(point1=(self.articlePart[2]*self.taL, 0.0), point2=(self.articlePart[2]*self.taL, -self.taH))
+        s.Line(point1=(0.0, -self.articlePart[2]*self.taH), point2=(self.taL, -self.articlePart[2]*self.taH))
+        p = self.mdb.models['Model-1'].parts['Test_Article']
+        f = p.faces
+        pickedFaces = p.faces.findAt(((5e-6,-5e-6,0.0),))
+        e1, d2 = p.edges, p.datums
+        p.PartitionFaceBySketch(faces=pickedFaces, sketch=s)
+        s.unsetPrimaryObject()
+        del self.mdb.models['Model-1'].sketches['__profile__']
+
+        p = self.mdb.models['Model-1'].parts['Test_Article']
+        f, e, d1 = p.faces, p.edges, p.datums
+        t = p.MakeSketchTransform(sketchPlane=f[0], sketchPlaneSide=SIDE1, origin=(0.0, 0.0, 0.0))
+        s = self.mdb.models['Model-1'].ConstrainedSketch(name='__profile__', sheetSize=0.5,gridSpacing=0.01, transform=t)
+        g, v, d, c = s.geometry, s.vertices, s.dimensions, s.constraints
+        s.setPrimaryObject(option=SUPERIMPOSE)
+        p = self.mdb.models['Model-1'].parts['Test_Article']
+        p.projectReferencesOntoSketch(sketch=s, filter=COPLANAR_EDGES)
+        s.Line(point1=(self.articlePart[1]*self.taL, 0.0), point2=(self.articlePart[1]*self.taL, -self.taH))
+        s.Line(point1=(0.0, -self.articlePart[1]*self.taH), point2=(self.taL, -self.articlePart[1]*self.taH))
+        p = self.mdb.models['Model-1'].parts['Test_Article']
+        f = p.faces
+        pickedFaces = p.faces.findAt(((5e-6,-5e-6,0.0),))
+        e1, d2 = p.edges, p.datums
+        p.PartitionFaceBySketch(faces=pickedFaces, sketch=s)
+        s.unsetPrimaryObject()
+        del self.mdb.models['Model-1'].sketches['__profile__']
+
+        p = self.mdb.models['Model-1'].parts['Test_Article']
+        edges = p.edges.findAt(((0.0,-5e-6,0.0),))
+        p.Set(edges=edges, name='Results_CL_Set')
+        edges = p.edges.findAt(((5e-6,0.0,0.0),))
+        p.Set(edges=edges, name='Results_Surf_Set')
+
+        p = self.mdb.models['Model-1'].parts['Test_Article']
+        faces = p.faces.findAt(((0.0,0.0,0.0),))
+        p.Set(faces=faces, name='Remeshing_Set')
+        p.Set(faces=faces, name='Mat_Plastic_Set')
+        p.Set(faces=faces, name='Node_Contact_Set')
+        faces = f.getSequenceFromMask(mask=('[#3fe ]', ), )
+        p.Set(faces=faces, name='Mat_Elastic_Set')
+
+        p = self.mdb.models['Model-1'].parts['Test_Article']
+        edges = p.edges.findAt(((0.0,-5e-6,0.0),),((5e-6,0.0,0.0),),((5e-6,-self.articlePart[1]*self.taL,0.0),),((self.articlePart[1]*self.taL,-5e-6,0.0),))
+        p.seedEdgeBySize(edges=edges, size=meshSize1, deviationFactor=0.1, minSizeFactor=0.1, constraint=FINER)
+        p.Set(edges=edges, name='Mesh_1_Edge_Seeds')
+
+        p = self.mdb.models['Model-1'].parts['Test_Article']
+        edges1 = p.edges.findAt(((self.articlePart[2]*self.taL,-5e-6,0.0),),((self.articlePart[2]*self.taL,-self.articlePart[2]*self.taL+5e-6,0.0),))
+        edges2 = p.edges.findAt(((5e-6,-self.articlePart[2]*self.taL,0.0),),((self.articlePart[2]*self.taL-5e-6,-self.articlePart[2]*self.taL,0.0),))
+        p.seedEdgeBySize(edges=edges1+edges2, size=meshSize2, deviationFactor=0.1, minSizeFactor=0.1, constraint=FINER)
+        p.Set(edges=edges1+edges2, name='Mesh_2_Edge_Seeds')
+
+        p = self.mdb.models['Model-1'].parts['Test_Article']
+        edges1 = p.edges.findAt(((self.articlePart[3]*self.taL,-5e-6,0.0),),((self.articlePart[3]*self.taL,-self.articlePart[3]*self.taL+5e-6,0.0),))
+        edges2 = p.edges.findAt(((5e-6,-self.articlePart[3]*self.taL,0.0),),((self.articlePart[3]*self.taL-5e-6,-self.articlePart[3]*self.taL,0.0),))
+        p.seedEdgeBySize(edges=edges1+edges2, size=meshSize3, deviationFactor=0.1, minSizeFactor=0.1, constraint=FINER)
+        p.Set(edges=edges1+edges2, name='Mesh_3_Edge_Seeds')
+
+        p = self.mdb.models['Model-1'].parts['Test_Article']
+        edges1 = p.edges.findAt(((self.taL,-5e-6,0.0),),((self.taL,-self.taL+5e-6,0.0),))
+        edges2 = p.edges.findAt(((5e-6,-self.taL,0.0),),((self.taL-5e-6,-self.taL,0.0),))
+        p.seedEdgeBySize(edges=edges1+edges2, size=meshSize4, deviationFactor=0.1, minSizeFactor=0.1, constraint=FINER)
+        p.Set(edges=edges1+edges2, name='Mesh_4_Edge_Seeds')
+
+        #Horizontal 1 -> 2
+        end1Edges = p.edges.findAt(((self.articlePart[1]*self.taL+5e-6,-self.articlePart[1]*self.taH,0.0),))
+        end2Edges = p.edges.findAt(((self.articlePart[1]*self.taL+5e-6,0.0,0.0),))
+        p.seedEdgeByBias(biasMethod=SINGLE, end1Edges=end1Edges, minSize=meshSize1, maxSize=meshSize2, constraint=FINER)
+        p.seedEdgeByBias(biasMethod=SINGLE, end2Edges=end2Edges, minSize=meshSize1, maxSize=meshSize2, constraint=FINER)
+
+        #Vertical 1 -> 2
+        end1Edges = p.edges.findAt(((0.0,-(self.articlePart[1]*self.taH+5e-6),0.0),))
+        end1Edges = end1Edges + p.edges.findAt(((self.articlePart[1]*self.taL,-(self.articlePart[1]*self.taH+5e-6),0.0),))
+        p.seedEdgeByBias(biasMethod=SINGLE, end1Edges=end1Edges, minSize=meshSize1, maxSize=meshSize2, constraint=FINER)
+
+        #Horizontal 2 -> 3
+        end1Edges = p.edges.findAt(((self.articlePart[2]*self.taL+5e-6,-self.articlePart[2]*self.taH,0.0),))
+        end2Edges = p.edges.findAt(((self.articlePart[2]*self.taL+5e-6,0.0,0.0),))
+        p.seedEdgeByBias(biasMethod=SINGLE, end1Edges=end1Edges, minSize=meshSize2, maxSize=meshSize3, constraint=FINER)
+        p.seedEdgeByBias(biasMethod=SINGLE, end2Edges=end2Edges, minSize=meshSize2, maxSize=meshSize3, constraint=FINER)
+
+        #Vertical 2 -> 3
+        end1Edges = p.edges.findAt(((0.0,-(self.articlePart[2]*self.taH+5e-6),0.0),))
+        end1Edges = end1Edges + p.edges.findAt(((self.articlePart[2]*self.taL,-(self.articlePart[2]*self.taH+5e-6),0.0),))
+        p.seedEdgeByBias(biasMethod=SINGLE, end1Edges=end1Edges, minSize=meshSize2, maxSize=meshSize3, constraint=FINER)
+
+        #Horizontal 3 -> 4
+        end1Edges = p.edges.findAt(((self.articlePart[3]*self.taL+5e-6,-self.articlePart[3]*self.taH,0.0),))
+        end2Edges = p.edges.findAt(((self.articlePart[3]*self.taL+5e-6,0.0,0.0),))
+        p.seedEdgeByBias(biasMethod=SINGLE, end1Edges=end1Edges, minSize=meshSize3, maxSize=meshSize4, constraint=FINER)
+        p.seedEdgeByBias(biasMethod=SINGLE, end2Edges=end2Edges, minSize=meshSize3, maxSize=meshSize4, constraint=FINER)
+
+        #Vertical 3 -> 4
+        end1Edges = p.edges.findAt(((0.0,-(self.articlePart[3]*self.taH+5e-6),0.0),))
+        end1Edges = end1Edges + p.edges.findAt(((self.articlePart[3]*self.taL,-(self.articlePart[3]*self.taH+5e-6),0.0),))
+        p.seedEdgeByBias(biasMethod=SINGLE, end1Edges=end1Edges, minSize=meshSize3, maxSize=meshSize4, constraint=FINER)
+
+        p = self.mdb.models['Model-1'].parts['Test_Article']
+        pickedRegions = p.faces.findAt(((0.0,0.0,0.0),))
+        p.setMeshControls(regions=pickedRegions, technique=SWEEP)
+        pickedRegions = p.faces.findAt(((self.articlePart[1]*self.taL+5e-6,0.0,0.0),),((0.0,-self.articlePart[1]*self.taL-5e-6,0.0),),((self.articlePart[1]*self.taL+5e-6,-self.articlePart[1]*self.taL-5e-6,0.0),))
+        p.setMeshControls(regions=pickedRegions, algorithm=ADVANCING_FRONT)
+        # pickedRegions = p.faces.findAt(((self.articlePart[3]*self.taL+5e-6,0.0,0.0),),((0.0,-self.articlePart[3]*self.taL-5e-6,0.0),),((self.articlePart[3]*self.taL+5e-6,-self.articlePart[3]*self.taL-5e-6,0.0),))
+        pickedRegions = p.faces.findAt(((self.articlePart[3]*self.taL+5e-6,0.0,0.0),),((0.0,-self.articlePart[3]*self.taL-5e-6,0.0),))
+        p.setMeshControls(regions=pickedRegions, algorithm=ADVANCING_FRONT, allowMapped=False)
+
+        p.generateMesh()
+
+        return(0)
+
     #-----------------------------------------------------------------------
 
     def createIndenter(self,*args,**kwargs):
@@ -1159,10 +1383,7 @@ class ASym_Indenter_Analysis(ASym_Analysis):
         self.iRad = kwargs.get('partIndRadius',0.0)
         self.iFlat = kwargs.get('partIndFlat',0.0)
         indMeshMultiples = kwargs.get('indMeshMultiples',[1.0,100.0])
-        charIndSizeMultiple = kwargs.get('charIndSizeMultiple',10.0)
-
-        #Characteristic Indenter Size (hypotenuse of sharp indenter)
-        self.charIndSize = charIndSizeMultiple * self.articlePart[1]*self.taL
+        charIndSizeFactor = kwargs.get('charIndSizeFactor',0.5)
 
         from caeModules import part, mesh
 
@@ -1279,6 +1500,9 @@ class ASym_Indenter_Analysis(ASym_Analysis):
 
         #Discrete Deformable Indenter
         elif self.partIndType == 'Deformable':
+
+            #Characteristic Indenter Size (hypotenuse of sharp indenter)
+            self.charIndSize = charIndSizeFactor * self.taL
 
             fineMeshSize = indMeshMultiples[0] * self.meshSize
             coarseMeshSize = indMeshMultiples[1] * self.meshSize
@@ -1513,8 +1737,6 @@ class ASym_Indenter_Analysis(ASym_Analysis):
 
     #-----------------------------------------------------------------------
 
-    #-----------------------------------------------------------------------
-
     def createAssembly(self,*args,**kwargs):
 
         self.indenterType = args[0]
@@ -1581,8 +1803,6 @@ class General_Output(object):
 
     #-----------------------------------------------------------------------
 
-    #-----------------------------------------------------------------------
-
     def WholeModelHistory(self,*args,**kwargs):
 
         ratioValues = kwargs.get('ratioValues', False)
@@ -1602,11 +1822,11 @@ class General_Output(object):
 
         import csv
 
-        anCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + 'WholeModelHistory' + '.csv')
+        resCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + 'WholeModelHistory' + '.csv')
 
-        tempFile = open(anCSVname, 'wb')
+        tempFile = open(resCSVname, 'wb')
 
-        with open(anCSVname, 'wb') as tempFile:
+        with open(resCSVname, 'wb') as tempFile:
 
             csvWriter = csv.writer(tempFile)
 
@@ -1655,11 +1875,9 @@ class General_Output(object):
 
                     csvWriter.writerow(tempRow)
 
-        print('Writing CSV File: %s\n\n\n' %(anCSVname))
+        print('Writing CSV File: %s\n\n\n' %(resCSVname))
 
         return(0)
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
@@ -1719,13 +1937,13 @@ class General_Output(object):
 
             titleRow = ['CFORCE1','CFORCE2','ANGLEvert(rad)','ANGLEvert(deg)','ANGLEhoriz(rad)','ANGLEhoriz(deg)','contactRadius']
 
-            anCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + 'CFORCE' + '.csv')
+            resCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + 'CFORCE' + '.csv')
 
-            print('Writing CSV File: %s\n\n\n' %(anCSVname))
+            print('Writing CSV File: %s\n\n\n' %(resCSVname))
 
-            tempFile = open(anCSVname, 'wb')
+            tempFile = open(resCSVname, 'wb')
 
-            with open(anCSVname, 'wb') as tempFile:
+            with open(resCSVname, 'wb') as tempFile:
 
                 csvWriter = csv.writer(tempFile)
 
@@ -1734,8 +1952,6 @@ class General_Output(object):
                 csvWriter.writerow([totalContactForceVector[0],totalContactForceVector[1],totalContactForceVector[2],totalContactForceVector[3],totalContactForceVector[4],totalContactForceVector[5],contactRadius])
 
         return(totalContactForceVector)
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
@@ -1895,13 +2111,13 @@ class General_Output(object):
             if resultName.startswith('CNORMF'): resultName = 'CNORMF'
             if resultName.startswith('CSHEARF'): resultName = 'CSHEARF'
 
-            anCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + resultName + '_' + stepName + '_' + instanceName + '-' + setName + '.csv')
+            resCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + resultName + '_' + stepName + '_' + instanceName + '-' + setName + '.csv')
 
-            print('Writing CSV File: %s\n\n\n' %(anCSVname))
+            print('Writing CSV File: %s\n\n\n' %(resCSVname))
 
-            tempFile = open(anCSVname, 'wb')
+            tempFile = open(resCSVname, 'wb')
 
-            with open(anCSVname, 'wb') as tempFile:
+            with open(resCSVname, 'wb') as tempFile:
 
                 csvWriter = csv.writer(tempFile)
 
@@ -1912,8 +2128,6 @@ class General_Output(object):
                     csvWriter.writerow(finalResults[i])
 
         return(finalResults)
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
@@ -2031,13 +2245,13 @@ class General_Output(object):
             if resultName.startswith('CNORMF'): resultName = 'CNORMF'
             if resultName.startswith('CSHEARF'): resultName = 'CSHEARF'
 
-            anCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + resultName + '_' + stepName + '_' + instanceName + '-' + setName + '.csv')
+            resCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + resultName + '_' + stepName + '_' + instanceName + '-' + setName + '.csv')
 
-            print('Writing CSV File: %s\n\n\n' %(anCSVname))
+            print('Writing CSV File: %s\n\n\n' %(resCSVname))
 
-            tempFile = open(anCSVname, 'wb')
+            tempFile = open(resCSVname, 'wb')
 
-            with open(anCSVname, 'wb') as tempFile:
+            with open(resCSVname, 'wb') as tempFile:
 
                 csvWriter = csv.writer(tempFile)
 
@@ -2138,8 +2352,6 @@ class Indentation_Output(General_Output):
 
     #-----------------------------------------------------------------------
 
-    #-----------------------------------------------------------------------
-
     def WorkForceDist(self,*args,**kwargs):
 
         instanceNameRF = kwargs.get('instanceNameRF', None)
@@ -2165,11 +2377,11 @@ class Indentation_Output(General_Output):
         else: print('Error: No Distance Node Set Selected.')
 
         headerRow = ['Step', 'Frame', 'Step Time', 'RF1', 'RF2', 'RF-Angle', 'U1', 'U2', 'frameWork1', 'frameWork2', 'totalWork1', 'totalWork2','RF2Calc(mN)=ALLIE/Disp(mN)', 'ALLIE', 'ALLWK','','negU2(um)','RF2(mN)','K(mN/um)','Ewk(nJ)','','negU2(nm)','RF2(uN)','K(uN/nm)','Ewk(pJ)']
-        anCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + 'RF_Work' + fileNameSuffix + '.csv')
+        resCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + 'RF_Work' + fileNameSuffix + '.csv')
 
-        tempFile = open(anCSVname, 'wb')
+        tempFile = open(resCSVname, 'wb')
 
-        with open(anCSVname, 'wb') as tempFile:
+        with open(resCSVname, 'wb') as tempFile:
 
             csvWriter = csv.writer(tempFile)
 
@@ -2284,11 +2496,9 @@ class Indentation_Output(General_Output):
 
                     i += 1
 
-        print('Writing CSV File: %s\n\n\n' %(anCSVname))
+        print('Writing CSV File: %s\n\n\n' %(resCSVname))
 
         return(0)
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
@@ -2342,13 +2552,13 @@ class Indentation_Output(General_Output):
 
             titleRow = ['negVol','posVol','totVol']
 
-            anCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + 'iVol' + '.csv')
+            resCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + 'iVol' + '.csv')
 
-            print('Writing CSV File: %s\n\n\n' %(anCSVname))
+            print('Writing CSV File: %s\n\n\n' %(resCSVname))
 
-            tempFile = open(anCSVname, 'wb')
+            tempFile = open(resCSVname, 'wb')
 
-            with open(anCSVname, 'wb') as tempFile:
+            with open(resCSVname, 'wb') as tempFile:
 
                 csvWriter = csv.writer(tempFile)
 
@@ -2359,8 +2569,6 @@ class Indentation_Output(General_Output):
                 # csvWriter.writerow(['Calculations Stopped at x=%s'%(sortedNodeSet[i][1])])
 
         return([volNegSum,volPosSum,volTotSum])
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
@@ -2510,7 +2718,7 @@ class Indentation_Output(General_Output):
         try: normalVars['plasticZoneHeight_RemoveY'] = normalVars['plasticEdge_RemoveY'] - normalVars['indentDepth_RemoveY']
         except: normalVars['plasticZoneHeight_RemoveY'] = None
         #-----------------------------------------------------------------------
-        try: normalVars['calculated_Hardness'] = normalVars['maxRF2_Total'] / (pi * (normalVars['contactEdge_IndentX'])**2.0)
+        try: normalVars['calculated_Hardness'] = normalVars['maxRF2_Total'] / (pi * (normalVars['contactEdge_RemoveX'])**2.0)
         except: normalVars['calculated_Hardness'] = None
         #-----------------------------------------------------------------------
 
@@ -2521,13 +2729,13 @@ class Indentation_Output(General_Output):
 
             import csv
 
-            anCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + 'normVars' + '.csv')
+            resCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + 'normVars' + '.csv')
 
-            print('Writing CSV File: %s\n\n\n' %(anCSVname))
+            print('Writing CSV File: %s\n\n\n' %(resCSVname))
 
-            tempFile = open(anCSVname, 'wb')
+            tempFile = open(resCSVname, 'wb')
 
-            with open(anCSVname, 'wb') as tempFile:
+            with open(resCSVname, 'wb') as tempFile:
 
                 csvWriter = csv.writer(tempFile)
 
@@ -2536,8 +2744,6 @@ class Indentation_Output(General_Output):
                     csvWriter.writerow([key,normalVars[key]])
 
         return(normalVars)
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
@@ -2662,13 +2868,13 @@ class Indentation_Output(General_Output):
             if resultName.startswith('CNORMF'): resultName = 'CNORMF'
             if resultName.startswith('CSHEARF'): resultName = 'CSHEARF'
 
-            anCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + resultName + '_Invariants_' + stepName + '_' + instanceName + '-' + setName + '.csv')
+            resCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + resultName + '_Invariants_' + stepName + '_' + instanceName + '-' + setName + '.csv')
 
-            print('Writing CSV File: %s\n\n\n' %(anCSVname))
+            print('Writing CSV File: %s\n\n\n' %(resCSVname))
 
-            tempFile = open(anCSVname, 'wb')
+            tempFile = open(resCSVname, 'wb')
 
-            with open(anCSVname, 'wb') as tempFile:
+            with open(resCSVname, 'wb') as tempFile:
 
                 csvWriter = csv.writer(tempFile)
 
@@ -2679,8 +2885,6 @@ class Indentation_Output(General_Output):
                     csvWriter.writerow(finalResults[i])
 
         return(finalResults)
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
@@ -2753,13 +2957,13 @@ class Indentation_Output(General_Output):
 
         if writeCSV:
 
-            anCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + 'Invariants' + '_' + stepName + '_' + instanceName + '-' + setName + '.csv')
+            resCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + 'Invariants' + '_' + stepName + '_' + instanceName + '-' + setName + '.csv')
 
-            print('Writing CSV File: %s\n\n\n' %(anCSVname))
+            print('Writing CSV File: %s\n\n\n' %(resCSVname))
 
-            tempFile = open(anCSVname, 'wb')
+            tempFile = open(resCSVname, 'wb')
 
-            with open(anCSVname, 'wb') as tempFile:
+            with open(resCSVname, 'wb') as tempFile:
 
                 csvWriter = csv.writer(tempFile)
 
@@ -2770,8 +2974,6 @@ class Indentation_Output(General_Output):
                     csvWriter.writerow(finalResults[i])
 
         return(finalResults)
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
@@ -2924,15 +3126,15 @@ class Indentation_Output(General_Output):
 
             import csv
 
-            anCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + resultName + '_' + 'PlasticZone' + '_' + ('%1.0E'%(limitPE)).rstrip('0').rstrip('.') + '_' + stepName + '.csv')
+            resCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + resultName + '_' + 'PlasticZone' + '_' + ('%1.0E'%(limitPE)).rstrip('0').rstrip('.') + '_' + stepName + '.csv')
 
-            print('Writing CSV File: %s\n\n\n' %(anCSVname))
+            print('Writing CSV File: %s\n\n\n' %(resCSVname))
 
             titleRow = list(coordSet.componentLabels) + ['Element Label','Element Connectivity'] + ['ElementLabel'] + list(resultSet.componentLabels) + list(resultPE.componentLabels)
 
-            tempFile = open(anCSVname, 'wb')
+            tempFile = open(resCSVname, 'wb')
 
-            with open(anCSVname, 'wb') as tempFile:
+            with open(resCSVname, 'wb') as tempFile:
 
                 csvWriter = csv.writer(tempFile)
 
@@ -2943,8 +3145,6 @@ class Indentation_Output(General_Output):
                     csvWriter.writerow(unsortedResults[i])
 
         return(unsortedResults)
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
@@ -3132,13 +3332,13 @@ class Indentation_Output(General_Output):
             if resultName.startswith('CNORMF'): resultName = 'CNORMF'
             if resultName.startswith('CSHEARF'): resultName = 'CSHEARF'
 
-            anCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + resultName + '_' + stepName + '_' + instanceName + '-' + setName + '.csv')
+            resCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + resultName + '_' + stepName + '_' + instanceName + '-' + setName + '.csv')
 
-            print('Writing CSV File: %s\n\n\n' %(anCSVname))
+            print('Writing CSV File: %s\n\n\n' %(resCSVname))
 
-            tempFile = open(anCSVname, 'wb')
+            tempFile = open(resCSVname, 'wb')
 
-            with open(anCSVname, 'wb') as tempFile:
+            with open(resCSVname, 'wb') as tempFile:
 
                 csvWriter = csv.writer(tempFile)
 
@@ -3151,7 +3351,6 @@ class Indentation_Output(General_Output):
         return(finalResults)
 
     #-----------------------------------------------------------------------
-
 
 #--------------------------------------------------------------------------------------------------
 
@@ -3166,8 +3365,6 @@ class Sym_Analysis(General_Analysis):
     def __init__(self,*args,**kwargs):
 
         return(None)
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
@@ -3295,8 +3492,6 @@ class Sym_Analysis(General_Analysis):
         else: raise ValueError('Analysis type chosen is not valid.')
 
         return(0)
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
@@ -3457,8 +3652,6 @@ class QSym_Indenter_Analysis(Sym_Analysis):
         self.mdb = Mdb()
 
         return(None)
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
@@ -3635,8 +3828,6 @@ class QSym_Indenter_Analysis(Sym_Analysis):
 
     #-----------------------------------------------------------------------
 
-    #-----------------------------------------------------------------------
-
     def createQuarterIndenter(self,*args,**kwargs):
 
         import numpy as np
@@ -3722,8 +3913,6 @@ class QSym_Indenter_Analysis(Sym_Analysis):
 
     #-----------------------------------------------------------------------
 
-    #-----------------------------------------------------------------------
-
     def createAssembly(self,*args,**kwargs):
 
         self.indenterType = args[0]
@@ -3799,8 +3988,6 @@ class HSym_Indenter_Analysis(Sym_Analysis):
         self.mdb = Mdb()
 
         return(None)
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
@@ -3977,8 +4164,6 @@ class HSym_Indenter_Analysis(Sym_Analysis):
         p.generateMesh()
 
         return(0)
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
@@ -4254,8 +4439,6 @@ class ASym_Pillar_Analysis(ASym_Analysis):
         self.mdb = Mdb()
 
         return(None)
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
@@ -4568,8 +4751,6 @@ class ASym_Pillar_Analysis(ASym_Analysis):
 
     #-----------------------------------------------------------------------
 
-    #-----------------------------------------------------------------------
-
     def createPillarIndenter(self,*args,**kwargs):
 
         import numpy as np
@@ -4864,8 +5045,6 @@ class ASym_Pillar_Analysis(ASym_Analysis):
             p.SectionAssignment(region=region, sectionName='Elastic_'+self.matIndName, offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
 
         return(0)
-
-    #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
 
