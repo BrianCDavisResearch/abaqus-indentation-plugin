@@ -16,45 +16,367 @@ class SharpIndentationModelDB(AFXDataDialog):
 
     def __init__(self,form):
 
-        AFXDataDialog.__init__(self, form, i18n.tr('Sharp Indentation Model'), self.OK|self.APPLY|self.DEFAULTS|self.CANCEL)
+        import os
 
         self.form = form
 
-        AFXNote(self, i18n.tr('This is my custom plugin "Model Workbench".'))
+        AFXDataDialog.__init__(self, self.form, i18n.tr('Sharp Indentation Model'), self.OK|self.APPLY|self.DEFAULTS|self.CANCEL)
 
-        hf = FXHorizontalFrame(self, LAYOUT_FILL_X, 0,0,0,0, 0,0,0,0)
+        tb = FXTabBook(self, tgt=None, sel=0, opts=TABBOOK_NORMAL, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING)
 
-        import time
+        #-----------------------------------------------------------------------
 
-        gb = FXGroupBox(hf, i18n.tr('Time: %s'%(time.clock())), LAYOUT_FILL_Y|FRAME_GROOVE)
-        va = AFXVerticalAligner(gb)
+        tb0 = FXTabItem(tb, i18n.tr('Model Inputs'), ic=None, opts=TAB_TOP_NORMAL, x=0, y=0, w=0, h=0, pl=6, pr=6, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
 
-        FXCheckButton(va, 'This is checkbox #1', form.checkbox1)
+        hfModel_0 = FXHorizontalFrame(tb, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING+5, pr=DEFAULT_SPACING+5, pt=DEFAULT_SPACING+5, pb=DEFAULT_SPACING+5, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
 
-        self.nameField = AFXTextField(va, 12, i18n.tr('Name:'), form.nameKw, 0)
-        AFXTextField(va, 12, i18n.tr('Width (w):'), form.widthKw, 0)
-        # AFXTextField(va, 12, i18n.tr('Height (h):'), form.heightKw, 0)
-        # AFXTextField(va, 12, i18n.tr('Radius (r):'), form.radiusKw, 0)
+        #-----------------------------------------------------------------------
 
-        # gb = FXGroupBox(hf, i18n.tr('Diagram'), LAYOUT_FILL_Y|FRAME_GROOVE)
-        # icon = FXXPMIcon(getAFXApp(), plateData_Dep) #ASCII image pulled here as "plateData_Dep"
-        # FXLabel(gb, '', icon, pl=0, pr=0, pt=0, pb=0)
+        vfModel_1 = FXVerticalFrame(hfModel_0, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING+10)
 
-        # print >> sys.__stdout__, self
+        gbModel_11 = FXGroupBox(vfModel_1, i18n.tr('Analysis Type'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING+75, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        comboBox = AFXComboBox(gbModel_11, 0, 0, '', tgt=self.form.anType, sel=0, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        # comboBox.appendItem('Standard - Static')
+        comboBox.appendItem('Standard - Quasi-Static')
+        comboBox.appendItem('Explicit - Mass Scaling')
 
-        # print >> sys.__stdout__, dir(self)
+        hfModel_11 = FXHorizontalFrame(vfModel_1, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=0, pb=0, hs=DEFAULT_SPACING+27, vs=DEFAULT_SPACING)
+
+        gbModel_111 = FXGroupBox(hfModel_11, i18n.tr('Results Intervals'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        vaModel1 = AFXVerticalAligner(gbModel_111, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=0, pb=0, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        AFXTextField(vaModel1, 4, 'Field', tgt=self.form.outpFieldInt, sel=0, opts=AFXTEXTFIELD_INTEGER, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        AFXTextField(vaModel1, 4, 'History', tgt=self.form.outpHistInt, sel=0, opts=AFXTEXTFIELD_INTEGER, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+
+        self.remesh0 = FXGroupBox(hfModel_11, i18n.tr('Adaptive Remeshing'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING+26, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        vaModel_112 = AFXVerticalAligner(self.remesh0, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=0, pb=0, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        self.remesh1 = AFXTextField(vaModel_112, 4, 'Frequency', tgt=self.form.meshRemeshing1, sel=0, opts=AFXTEXTFIELD_INTEGER, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.remesh2 = AFXTextField(vaModel_112, 4, 'Sweeps', tgt=self.form.meshRemeshing2, sel=0, opts=AFXTEXTFIELD_INTEGER, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        # self.remesh0.disable()
+        # self.remesh1.disable()
+        # self.remesh2.disable()
+
+        gbModel_113 = FXGroupBox(vfModel_1, i18n.tr('Job Name and Parallelization'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING+1, pr=DEFAULT_SPACING+1, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        # vaModel_113 = AFXVerticalAligner(gbModel_113, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=0, pb=0, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        AFXTextField(gbModel_113, 40, '', tgt=self.form.anJobName, sel=0, opts=AFXTEXTFIELD_STRING, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        AFXTextField(gbModel_113, 4, 'Parallel CPUs', tgt=self.form.anCPUs, sel=0, opts=AFXTEXTFIELD_INTEGER, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+
+        #-----------------------------------------------------------------------
+
+        vfModel_2 = FXVerticalFrame(hfModel_0, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING+10)
+
+        hfModel_21 = FXHorizontalFrame(vfModel_2, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=0, pb=0, hs=DEFAULT_SPACING+48, vs=DEFAULT_SPACING)
+
+        gbModel_211 = FXGroupBox(hfModel_21, i18n.tr('Boundary Conditions'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING+5, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        vaModel_211 = AFXVerticalAligner(gbModel_211, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=0, pb=0, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        AFXTextField(vaModel_211, 7, 'Indenter Depth', tgt=self.form.bcIndDepth, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        AFXTextField(vaModel_211, 7, 'Contact Friction', tgt=self.form.contFriciton, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+
+        gbModel_212 = FXGroupBox(hfModel_21, i18n.tr('Advanced Options'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING+5, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        vaModel_212 = AFXVerticalAligner(gbModel_212, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=0, pb=0, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        AFXTextField(vaModel_212, 4, 'Mesh Refinement', tgt=self.form.meshDivider, sel=0, opts=AFXTEXTFIELD_INTEGER, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        AFXTextField(vaModel_212, 4, 'Test Article Scale', tgt=self.form.partTaScale, sel=0, opts=AFXTEXTFIELD_INTEGER, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+
+
+        gbModel_213 = FXGroupBox(vfModel_2, i18n.tr('Indenter Geometry'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        hfModel_22 = FXHorizontalFrame(gbModel_213, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=0, pb=0, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        vaModel_213 = AFXVerticalAligner(hfModel_22, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=35, pb=0, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING+5)
+        AFXTextField(vaModel_213, 7, 'Phi: Demi-Angle (deg)', tgt=self.form.partIndDAngle, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        AFXTextField(vaModel_213, 7, 'Rf: Tip-Flat (um)', tgt=self.form.partIndFlat, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        AFXTextField(vaModel_213, 7, 'Ri: Tip-Radius (um)', tgt=self.form.partIndRadius, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+
+        tempIcon = afxCreatePNGIcon('%s\\abaqus_plugins\\SharpIndentation\\icon_Model.png' %(os.path.expanduser('~')))
+        FXLabel(hfModel_22, '', tempIcon)
+
+        #-----------------------------------------------------------------------
+
+        tb2 = FXTabItem(tb, i18n.tr('Material Properties'), ic=None, opts=TAB_TOP_NORMAL, x=0, y=0, w=0, h=0, pl=6, pr=6, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+
+        hfModel_2 = FXHorizontalFrame(tb, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING+5, pr=DEFAULT_SPACING+5, pt=DEFAULT_SPACING+5, pb=DEFAULT_SPACING+5, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+
+        #-----------------------------------------------------------------------
+
+        vfModel_3 = FXVerticalFrame(hfModel_2, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+
+        gbModel_31 = FXGroupBox(vfModel_3, i18n.tr('Indenter Type and Material'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        hfModel_42 = FXHorizontalFrame(gbModel_31, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING+43, vs=DEFAULT_SPACING)
+
+        self.indTypeComboBox = AFXComboBox(hfModel_42, 0, 2, '', tgt=self.form.partIndType, sel=0, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.indTypeComboBox.appendItem('Rigid')
+        self.indTypeComboBox.appendItem('Deformable')
+
+        self.indMatComboBox = AFXComboBox(hfModel_42, 0, 3, '', tgt=self.form.matIndName, sel=0, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.indMatComboBox.appendItem('Diamond')
+        self.indMatComboBox.appendItem('Sapphire')
+        self.indMatComboBox.appendItem('Custom')
+
+        vaModel_31 = AFXVerticalAligner(gbModel_31, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        self.indMatTextBox1 = AFXTextField(vaModel_31, 11, "Young's Modulus (MPa)", tgt=self.form.matIndEYM, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.indMatTextBox2 = AFXTextField(vaModel_31, 11, "Poisson's Ratio", tgt=self.form.matIndEPR, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.indMatTextBox3 = AFXTextField(vaModel_31, 11, "Density (mg/um^3)", tgt=self.form.matIndDensity, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+
+        gbModel_33 = FXGroupBox(vfModel_3, i18n.tr('Test Article Material'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        vaModel_32 = AFXVerticalAligner(gbModel_33, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        self.taMatTextBox0 = AFXTextField(vaModel_32, 11, 'Name', tgt=self.form.matTaName, sel=0, opts=AFXTEXTFIELD_STRING, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatTextBox1 = AFXTextField(vaModel_32, 11, "Young's Modulus (MPa)", tgt=self.form.matTaEYM, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatTextBox2 = AFXTextField(vaModel_32, 11, "Poisson's Ratio", tgt=self.form.matTaEPR, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatTextBox3 = AFXTextField(vaModel_32, 11, "Density (mg/um^3)", tgt=self.form.matTaDensity, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+
+
+        vfModel_4 = FXVerticalFrame(hfModel_2, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+
+        gbModel_41 = FXGroupBox(vfModel_4, i18n.tr('Test Article Plasticity'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING+3)
+        self.indTypeComboBox = AFXComboBox(gbModel_41, 0, 7, '', tgt=self.form.matTaPsModel, sel=0, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.indTypeComboBox.appendItem('von Mises')
+        self.indTypeComboBox.appendItem('PMP')
+        self.indTypeComboBox.appendItem('DPC')
+        self.indTypeComboBox.appendItem('DPC (Bruns et al. 2020)')
+        self.indTypeComboBox.appendItem('DPC (Davis et al. 2020)')
+        self.indTypeComboBox.appendItem('Kermouche et al. 2008 (Fortran Subroutine)')
+        self.indTypeComboBox.appendItem('Molnar et al. 2017 (Fortran Subroutine)')
+
+        self.gbModel_42 = FXGroupBox(gbModel_41, i18n.tr('von Mises and Porous Metal Plasticity (PMP)'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        hfModel_42 = FXHorizontalFrame(self.gbModel_42, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=0, pb=0, hs=DEFAULT_SPACING+5, vs=DEFAULT_SPACING)
+        self.taMatPlst11 = AFXTextField(hfModel_42, 7, 'YSmin', tgt=self.form.matTaPsVM, sel=0, opts=AFXTEXTFIELD_STRING, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD+10, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatPlst12 = AFXTextField(hfModel_42, 5, 'Relative Density', tgt=self.form.matTaPsGTNrd, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatPlst13 = AFXTextField(hfModel_42, 5, 'q1', tgt=self.form.matTaPsGTNq1, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatPlst14 = AFXTextField(hfModel_42, 5, 'q2', tgt=self.form.matTaPsGTNq2, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+
+        self.gbModel_43 = FXGroupBox(gbModel_41, i18n.tr('Drucker-Prager Cap (DPC)'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        hfModel_43 = FXHorizontalFrame(self.gbModel_43, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=0, pb=0, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        self.taMatPlst21 = AFXTextField(hfModel_43, 8, '', tgt=self.form.matTaPsDPCap0, sel=0, opts=AFXTEXTFIELD_STRING, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatPlst22 = AFXTextField(hfModel_43, 8, '', tgt=self.form.matTaPsDPCap1, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatPlst23 = AFXTextField(hfModel_43, 8, '', tgt=self.form.matTaPsDPCap2, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatPlst24 = AFXTextField(hfModel_43, 8, '', tgt=self.form.matTaPsDPCap3, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatPlst25 = AFXTextField(hfModel_43, 8, '', tgt=self.form.matTaPsDPCap4, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatPlst26 = AFXTextField(hfModel_43, 8, '', tgt=self.form.matTaPsDPCap5, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+
+        self.gbModel_44 = FXGroupBox(gbModel_41, i18n.tr('Kermouche et al. 2008'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        hfModel_44 = FXHorizontalFrame(self.gbModel_44, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=0, pb=0, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        self.taMatPlst31 = AFXTextField(hfModel_44, 10, '', tgt=self.form.matTaPsKerm1, sel=0, opts=AFXTEXTFIELD_STRING, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatPlst32 = AFXTextField(hfModel_44, 10, '', tgt=self.form.matTaPsKerm2, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatPlst33 = AFXTextField(hfModel_44, 10, '', tgt=self.form.matTaPsKerm3, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+
+        self.gbModel_45 = FXGroupBox(gbModel_41, i18n.tr('Molnar et al. 2017'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        hfModel_45 = FXHorizontalFrame(self.gbModel_45, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=0, pb=0, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        self.taMatPlst41 = AFXTextField(hfModel_45, 4, '', tgt=self.form.matTaPsMoln1, sel=0, opts=AFXTEXTFIELD_STRING, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatPlst42 = AFXTextField(hfModel_45, 5, '', tgt=self.form.matTaPsMoln2, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatPlst43 = AFXTextField(hfModel_45, 5, '', tgt=self.form.matTaPsMoln3, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatPlst44 = AFXTextField(hfModel_45, 5, '', tgt=self.form.matTaPsMoln4, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatPlst45 = AFXTextField(hfModel_45, 5, '', tgt=self.form.matTaPsMoln5, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatPlst46 = AFXTextField(hfModel_45, 4, '', tgt=self.form.matTaPsMoln6, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatPlst47 = AFXTextField(hfModel_45, 4, '', tgt=self.form.matTaPsMoln7, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatPlst48 = AFXTextField(hfModel_45, 6, '', tgt=self.form.matTaPsMoln8, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatPlst49 = AFXTextField(hfModel_45, 5, '', tgt=self.form.matTaPsMoln9, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+
+        #-----------------------------------------------------------------------
+
+        tbUnits0 = FXTabItem(tb, i18n.tr('Units'), ic=None, opts=TAB_TOP_NORMAL, x=0, y=0, w=0, h=0, pl=6, pr=6, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+
+        vfUnits1 = FXVerticalFrame(tb, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING+10, pr=DEFAULT_SPACING+10, pt=DEFAULT_SPACING+10, pb=DEFAULT_SPACING+10, hs=DEFAULT_SPACING+10, vs=DEFAULT_SPACING+10)
+
+        hfUnits1 = FXHorizontalFrame(vfUnits1, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=0, pb=0, hs=DEFAULT_SPACING+20, vs=0)
+
+        gbUnits1 = FXGroupBox(hfUnits1, i18n.tr('Base Units'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING+5, pr=DEFAULT_SPACING+5, pt=DEFAULT_SPACING+19, pb=DEFAULT_SPACING+19, hs=DEFAULT_SPACING+5, vs=DEFAULT_SPACING+5)
+        FXLabel(gbUnits1, i18n.tr('Mass -> milligram:     mg = kg*10^-6'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbUnits1, i18n.tr('Time -> millisecond:     ms = s*10^-3'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbUnits1, i18n.tr('Length -> micrometer:     um = m*10^-6'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+
+        gbUnits2 = FXGroupBox(hfUnits1, i18n.tr('Derrived Units'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING+5, pr=DEFAULT_SPACING+5, pt=DEFAULT_SPACING+5, pb=DEFAULT_SPACING+5, hs=DEFAULT_SPACING+5, vs=DEFAULT_SPACING+5)
+        FXLabel(gbUnits2, i18n.tr('Force -> microNewtons:     mg*um/ms^2 = N*10^-6 = uN'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbUnits2, i18n.tr('Pressure -> MegaPascals:     uN/um^2 = Pa*10^6 = MPa'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbUnits2, i18n.tr('Density -> milligram / micrometer^3:     mg/um^3'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbUnits2, i18n.tr('Energy -> picoJoule:     uN*um = J*10^-12 = pJ'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+
+        gbUnits3 = FXGroupBox(vfUnits1, i18n.tr('Density Conversions'), opts=FRAME_GROOVE, x=0, y=-20, w=0, h=0, pl=DEFAULT_SPACING+5, pr=DEFAULT_SPACING+5, pt=DEFAULT_SPACING+5, pb=DEFAULT_SPACING+5, hs=DEFAULT_SPACING+5, vs=DEFAULT_SPACING+5)
+        FXLabel(gbUnits3, i18n.tr('1 kg/m^3 = 1*10^-12 mg/um^3'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbUnits3, i18n.tr('1 g/cm^3 = 1*10^-9 mg/um^3'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+
+        #-----------------------------------------------------------------------
+
+        tbAbout0 = FXTabItem(tb, i18n.tr('About'), ic=None, opts=TAB_TOP_NORMAL, x=0, y=0, w=0, h=0, pl=6, pr=6, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+
+        vfAbout1 = FXVerticalFrame(tb, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING+10, pr=DEFAULT_SPACING+10, pt=DEFAULT_SPACING+10, pb=DEFAULT_SPACING+10, hs=DEFAULT_SPACING+10, vs=DEFAULT_SPACING+10)
+
+        gbAbout1 = FXGroupBox(vfAbout1, i18n.tr(''), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING+5, pr=DEFAULT_SPACING+5, pt=DEFAULT_SPACING+5, pb=DEFAULT_SPACING+5, hs=DEFAULT_SPACING+5, vs=DEFAULT_SPACING+5)
+        FXLabel(gbAbout1, i18n.tr('Sharp Indentation Model Plugin'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbAbout1, i18n.tr('Author: Brian C. Davis'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbAbout1, i18n.tr('Institution: Colorado School of Mines'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbAbout1, i18n.tr('bridavis@mines.edu'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbAbout1, i18n.tr('brian.campbell.davis@gmail.com'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+
+        #-----------------------------------------------------------------------
+
+        # print >> sys.__stdout__, dir(self.remesh1)
 
         return(None)
 
+    #-----------------------------------------------------------------------
+
     def processUpdates(self):
 
-        if self.form.checkbox1.getValue() == False:
+        #-----------------------------------------------------------------------
 
-            self.nameField.disable()
+        if self.form.anType.getValue() == 'Explicit - Mass Scaling':
+
+            self.remesh0.enable()
+            self.remesh1.enable()
+            self.remesh2.enable()
 
         else:
 
-            self.nameField.enable()
+            self.remesh0.disable()
+            self.remesh1.disable()
+            self.remesh2.disable()
+
+        #-----------------------------------------------------------------------
+
+        if self.form.partIndType.getValue() == 'Rigid':
+
+            self.form.matIndName.setValue('Diamond')
+
+            self.indMatComboBox.disable()
+            self.indMatTextBox1.disable()
+            self.indMatTextBox2.disable()
+            self.indMatTextBox3.disable()
+
+        elif self.form.partIndType.getValue() == 'Deformable':
+
+            self.indMatComboBox.enable()
+            self.indMatTextBox1.enable()
+            self.indMatTextBox2.enable()
+            self.indMatTextBox3.enable()
+
+        #-----------------------------------------------------------------------
+
+        if self.form.matIndName.getValue() == 'Diamond':
+
+            self.form.matIndEYM.setValue(1050e3)
+            self.form.matIndEPR.setValue(0.20)
+            self.form.matIndDensity.setValue(3.52e-9)
+
+            self.indMatTextBox1.disable()
+            self.indMatTextBox2.disable()
+            self.indMatTextBox3.disable()
+
+        elif self.form.matIndName.getValue() == 'Sapphire':
+
+            self.form.matIndEYM.setValue(345e3)
+            self.form.matIndEPR.setValue(0.29)
+            self.form.matIndDensity.setValue(3.98e-9)
+
+            self.indMatTextBox1.disable()
+            self.indMatTextBox2.disable()
+            self.indMatTextBox3.disable()
+
+        elif self.form.matIndName.getValue() == 'Custom':
+
+            self.indMatTextBox1.enable()
+            self.indMatTextBox2.enable()
+            self.indMatTextBox3.enable()
+
+        #-----------------------------------------------------------------------
+
+        if self.form.matTaPsModel.getValue() == 'von Mises' or self.form.matTaPsModel.getValue() == 'PMP':
+
+            self.gbModel_42.enable()
+            self.taMatPlst11.enable()
+
+        else:
+
+            self.gbModel_42.disable()
+            self.taMatPlst11.disable()
+
+        if self.form.matTaPsModel.getValue() == 'PMP':
+
+            self.taMatPlst12.enable()
+            self.taMatPlst13.enable()
+            self.taMatPlst14.enable()
+
+        else:
+
+            self.taMatPlst12.disable()
+            self.taMatPlst13.disable()
+            self.taMatPlst14.disable()
+
+        if self.form.matTaPsModel.getValue() == 'DPC':
+
+            self.gbModel_43.enable()
+            self.taMatPlst21.enable()
+            self.taMatPlst22.enable()
+            self.taMatPlst23.enable()
+            self.taMatPlst24.enable()
+            self.taMatPlst25.enable()
+            self.taMatPlst26.enable()
+
+        else:
+
+            self.gbModel_43.disable()
+            self.taMatPlst21.disable()
+            self.taMatPlst22.disable()
+            self.taMatPlst23.disable()
+            self.taMatPlst24.disable()
+            self.taMatPlst25.disable()
+            self.taMatPlst26.disable()
+
+        if self.form.matTaPsModel.getValue() == 'DPC (Bruns et al. 2020)':
+
+            self.gbModel_43.enable()
+            self.form.matTaPsDPCap0.setValue(7500.0)
+            self.form.matTaPsDPCap1.setValue(1e-04)
+            self.form.matTaPsDPCap2.setValue(1.066)
+            self.form.matTaPsDPCap3.setValue(0.0)
+            self.form.matTaPsDPCap4.setValue(0.0)
+            self.form.matTaPsDPCap5.setValue(1.0)
+
+        if self.form.matTaPsModel.getValue() == 'DPC (Davis et al. 2020)':
+
+            self.gbModel_43.enable()
+            self.form.matTaPsDPCap0.setValue(5500.0)
+            self.form.matTaPsDPCap1.setValue(10.0)
+            self.form.matTaPsDPCap2.setValue(0.85)
+            self.form.matTaPsDPCap3.setValue(0.0)
+            self.form.matTaPsDPCap4.setValue(0.01)
+            self.form.matTaPsDPCap5.setValue(1.0)
+
+        if self.form.matTaPsModel.getValue() == 'Kermouche et al. 2008 (Fortran Subroutine)':
+
+            self.gbModel_44.enable()
+            self.taMatPlst31.enable()
+            self.taMatPlst32.enable()
+            self.taMatPlst33.enable()
+
+        else:
+
+            self.gbModel_44.disable()
+            self.taMatPlst31.disable()
+            self.taMatPlst32.disable()
+            self.taMatPlst33.disable()
+
+        if self.form.matTaPsModel.getValue() == 'Molnar et al. 2017 (Fortran Subroutine)':
+
+            self.gbModel_45.enable()
+            self.taMatPlst41.enable()
+            self.taMatPlst42.enable()
+            self.taMatPlst43.enable()
+            self.taMatPlst44.enable()
+            self.taMatPlst45.enable()
+            self.taMatPlst46.enable()
+            self.taMatPlst47.enable()
+            self.taMatPlst48.enable()
+            self.taMatPlst49.enable()
+
+        else:
+
+            self.gbModel_45.disable()
+            self.taMatPlst41.disable()
+            self.taMatPlst42.disable()
+            self.taMatPlst43.disable()
+            self.taMatPlst44.disable()
+            self.taMatPlst45.disable()
+            self.taMatPlst46.disable()
+            self.taMatPlst47.disable()
+            self.taMatPlst48.disable()
+            self.taMatPlst49.disable()
 
         return(None)
 
@@ -96,7 +418,7 @@ class SharpIndentationResultsDB(AFXDataDialog):
         self.boolWorkForceButton = FXCheckButton(hf2, tempText, tgt=None, sel=0, opts=CHECKBUTTON_NORMAL, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD+10, pb=DEFAULT_PAD)
         self.boolWorkForceButton.setCheck(state=True)
         self.boolWorkForceButton.disable()
-        FXLabel(hf2, i18n.tr('Force and Work Energy vs. Displacement (Required)'), pl=DEFAULT_PAD-3, pr=DEFAULT_PAD, pt=DEFAULT_PAD+10, pb=DEFAULT_PAD)
+        FXLabel(hf2, i18n.tr('Force and Work Energy vs. Displacement (Required)'), pl=DEFAULT_PAD-3, pr=DEFAULT_PAD, pt=DEFAULT_PAD+9, pb=DEFAULT_PAD)
 
         tempText = i18n.tr('Energy Summations (Whole Model "History")')
         self.boolEnergyButton = FXCheckButton(gb2, tempText, tgt=self.form.boolEnergy, sel=0, opts=CHECKBUTTON_NORMAL, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
@@ -138,36 +460,37 @@ class SharpIndentationResultsDB(AFXDataDialog):
 
         #-----------------------------------------------------------------------
 
-        tb2 = FXTabItem(tb, i18n.tr('Units'), ic=None, opts=TAB_TOP_NORMAL, x=0, y=0, w=0, h=0, pl=6, pr=6, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        tbUnits0 = FXTabItem(tb, i18n.tr('Units'), ic=None, opts=TAB_TOP_NORMAL, x=0, y=0, w=0, h=0, pl=6, pr=6, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
 
-        vf3 = FXVerticalFrame(tb, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING+5, pr=DEFAULT_SPACING+7, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        vfUnits1 = FXVerticalFrame(tb, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING+10, pr=DEFAULT_SPACING+10, pt=DEFAULT_SPACING+10, pb=DEFAULT_SPACING+10, hs=DEFAULT_SPACING+10, vs=DEFAULT_SPACING+10)
 
-        gb3 = FXGroupBox(vf3, i18n.tr('Base Units'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
-        FXLabel(gb3, i18n.tr('Mass -> milligram:     mg = kg*10^-6'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
-        FXLabel(gb3, i18n.tr('Time -> millisecond:     ms = s*10^-3'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
-        FXLabel(gb3, i18n.tr('Length -> micrometer:     um = m*10^-6'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        gbUnits1 = FXGroupBox(vfUnits1, i18n.tr('Base Units'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING+5, pr=DEFAULT_SPACING+5, pt=DEFAULT_SPACING+5, pb=DEFAULT_SPACING+5, hs=DEFAULT_SPACING+5, vs=DEFAULT_SPACING+5)
+        FXLabel(gbUnits1, i18n.tr('Mass -> milligram:     mg = kg*10^-6'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbUnits1, i18n.tr('Time -> millisecond:     ms = s*10^-3'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbUnits1, i18n.tr('Length -> micrometer:     um = m*10^-6'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
 
-        gb4 = FXGroupBox(vf3, i18n.tr('Derrived Units'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
-        FXLabel(gb4, i18n.tr('Force -> microNewtons:     mg*um/ms^2 = N*10^-6 = uN'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
-        FXLabel(gb4, i18n.tr('Pressure -> MegaPascals:     uN/um^2 = Pa*10^6 = MPa'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
-        FXLabel(gb4, i18n.tr('Density -> milligram / micrometer^3:     mg/um^3'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
-        FXLabel(gb4, i18n.tr('Energy -> picoJoule:     uN*um = J*10^-12 = pJ'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        gbUnits2 = FXGroupBox(vfUnits1, i18n.tr('Derrived Units'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING+5, pr=DEFAULT_SPACING+5, pt=DEFAULT_SPACING+5, pb=DEFAULT_SPACING+5, hs=DEFAULT_SPACING+5, vs=DEFAULT_SPACING+5)
+        FXLabel(gbUnits2, i18n.tr('Force -> microNewtons:     mg*um/ms^2 = N*10^-6 = uN'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbUnits2, i18n.tr('Pressure -> MegaPascals:     uN/um^2 = Pa*10^6 = MPa'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbUnits2, i18n.tr('Density -> milligram / micrometer^3:     mg/um^3'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbUnits2, i18n.tr('Energy -> picoJoule:     uN*um = J*10^-12 = pJ'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
 
-        gb5 = FXGroupBox(vf3, i18n.tr('Density Conversions'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
-        FXLabel(gb5, i18n.tr('1 kg/m^3 = 1*10^-12 mg/um^3'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
-        FXLabel(gb5, i18n.tr('1 g/cm^3 = 1*10^-9 mg/um^3'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        gbUnits3 = FXGroupBox(vfUnits1, i18n.tr('Density Conversions'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING+5, pr=DEFAULT_SPACING+5, pt=DEFAULT_SPACING+5, pb=DEFAULT_SPACING+5, hs=DEFAULT_SPACING+5, vs=DEFAULT_SPACING+5)
+        FXLabel(gbUnits3, i18n.tr('1 kg/m^3 = 1*10^-12 mg/um^3'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbUnits3, i18n.tr('1 g/cm^3 = 1*10^-9 mg/um^3'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
 
         #-----------------------------------------------------------------------
 
-        tb4 = FXTabItem(tb, i18n.tr('About'), ic=None, opts=TAB_TOP_NORMAL, x=0, y=0, w=0, h=0, pl=6, pr=6, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        tbAbout0 = FXTabItem(tb, i18n.tr('About'), ic=None, opts=TAB_TOP_NORMAL, x=0, y=0, w=0, h=0, pl=6, pr=6, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
 
-        vf5 = FXVerticalFrame(tb, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING+5, pr=DEFAULT_SPACING+7, pt=DEFAULT_SPACING+5, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        vfAbout1 = FXVerticalFrame(tb, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING+10, pr=DEFAULT_SPACING+10, pt=DEFAULT_SPACING+10, pb=DEFAULT_SPACING+10, hs=DEFAULT_SPACING+10, vs=DEFAULT_SPACING+10)
 
-        gb7 = FXGroupBox(vf5, i18n.tr(''), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
-        FXLabel(gb7, i18n.tr('Author: Brian C. Davis'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
-        FXLabel(gb7, i18n.tr('Institution: Colorado School of Mines'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
-        FXLabel(gb7, i18n.tr('bridavis@mines.edu'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
-        FXLabel(gb7, i18n.tr('brian.campbell.davis@gmail.com'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        gbAbout1 = FXGroupBox(vfAbout1, i18n.tr(''), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING+5, pr=DEFAULT_SPACING+5, pt=DEFAULT_SPACING+5, pb=DEFAULT_SPACING+5, hs=DEFAULT_SPACING+5, vs=DEFAULT_SPACING+5)
+        FXLabel(gbAbout1, i18n.tr('Sharp Indentation Results Plugin'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbAbout1, i18n.tr('Author: Brian C. Davis'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbAbout1, i18n.tr('Institution: Colorado School of Mines'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbAbout1, i18n.tr('bridavis@mines.edu'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbAbout1, i18n.tr('brian.campbell.davis@gmail.com'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
 
         #-----------------------------------------------------------------------
 

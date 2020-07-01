@@ -17,17 +17,73 @@ class SharpIndentationModel(AFXForm):
 
         AFXForm.__init__(self, owner)
 
-        self.cmd = AFXGuiCommand(self, 'default_system_units', 'LP_Indentation_Model')
+        self.cmd = AFXGuiCommand(self, 'plugin_prescript', 'LP_Indentation_Model')
 
         #-----------------------------------------------------------------------
 
-        # AFXBoolKeyword(command, name, booleanType=ON_OFF, isRequired=False, defaultValue=False)
-        self.checkbox1 = AFXBoolKeyword(self.cmd, 'testing', defaultValue=True)
+        self.anType = AFXStringKeyword(self.cmd, 'anType', isRequired=True, defaultValue='Standard - Quasi-Static')
 
-        self.nameKw = AFXStringKeyword(self.cmd, 'name', TRUE)
-        self.widthKw = AFXFloatKeyword(self.cmd, 'width', TRUE)
-        # self.heightKw = AFXFloatKeyword(self.cmd, 'height', TRUE)
-        # self.radiusKw = AFXFloatKeyword(self.cmd, 'radius', TRUE)
+        self.meshRemeshing1 = AFXIntKeyword(self.cmd, 'meshRemeshing1', isRequired=True, defaultValue=1)
+        self.meshRemeshing2 = AFXIntKeyword(self.cmd, 'meshRemeshing2', isRequired=True, defaultValue=2)
+
+        self.outpFieldInt = AFXIntKeyword(self.cmd, 'outpFieldInt', isRequired=True, defaultValue=50)
+        self.outpHistInt = AFXIntKeyword(self.cmd, 'outpHistInt', isRequired=True, defaultValue=50)
+        
+        self.anJobName = AFXStringKeyword(self.cmd, 'anJobName', isRequired=True, defaultValue='Sharp_Indentation')        
+        self.anCPUs = AFXIntKeyword(self.cmd, 'anCPUs', isRequired=True, defaultValue=4)        
+        
+        
+        self.bcIndDepth = AFXFloatKeyword(self.cmd, 'bcIndDepth', isRequired=True, defaultValue=3.0)
+        self.contFriciton = AFXFloatKeyword(self.cmd, 'contFriciton', isRequired=True, defaultValue=0.0)        
+           
+        self.meshDivider = AFXIntKeyword(self.cmd, 'meshDivider', isRequired=True, defaultValue=50)
+        self.partTaScale = AFXIntKeyword(self.cmd, 'partTaScale', isRequired=True, defaultValue=1)           
+           
+        self.partIndDAngle = AFXFloatKeyword(self.cmd, 'partIndDAngle', isRequired=True, defaultValue=70.3)
+        self.partIndFlat = AFXFloatKeyword(self.cmd, 'partIndFlat', isRequired=True, defaultValue=0.0)
+        self.partIndRadius = AFXFloatKeyword(self.cmd, 'partIndRadius', isRequired=True, defaultValue=0.0)            
+      
+        #-----------------------------------------------------------------------
+
+        self.partIndType = AFXStringKeyword(self.cmd, 'partIndType', isRequired=True, defaultValue='Rigid')
+        
+        self.matIndName = AFXStringKeyword(self.cmd, 'matIndName', isRequired=True, defaultValue='Diamond')
+        self.matIndEYM = AFXFloatKeyword(self.cmd, 'matIndEYM', isRequired=True, defaultValue=1050e3)
+        self.matIndEPR = AFXFloatKeyword(self.cmd, 'matIndEPR', isRequired=True, defaultValue=0.20)
+        self.matIndDensity = AFXFloatKeyword(self.cmd, 'matIndDensity', isRequired=True, defaultValue=3.52e-9)        
+
+        self.matTaName = AFXStringKeyword(self.cmd, 'matTaName', isRequired=True, defaultValue='Fused_Silica')
+        self.matTaEYM = AFXFloatKeyword(self.cmd, 'matTaEYM', isRequired=True, defaultValue=70.0e3)
+        self.matTaEPR = AFXFloatKeyword(self.cmd, 'matTaEPR', isRequired=True, defaultValue=0.15)
+        self.matTaDensity = AFXFloatKeyword(self.cmd, 'matTaDensity', isRequired=True, defaultValue=2.20e-9)  
+
+        self.matTaPsModel = AFXStringKeyword(self.cmd, 'matTaPsModel', isRequired=True, defaultValue='von Mises')
+
+        self.matTaPsVM = AFXFloatKeyword(self.cmd, 'matTaPsVM', isRequired=True, defaultValue=7.50e3)
+        self.matTaPsGTNrd = AFXFloatKeyword(self.cmd, 'matTaPsGTNrd', isRequired=True, defaultValue=0.85)
+        self.matTaPsGTNq1 = AFXFloatKeyword(self.cmd, 'matTaPsGTNq1', isRequired=True, defaultValue=0.90)
+        self.matTaPsGTNq2 = AFXFloatKeyword(self.cmd, 'matTaPsGTNq2', isRequired=True, defaultValue=0.90)
+
+        self.matTaPsDPCap0 = AFXFloatKeyword(self.cmd, 'matTaPsDPCap0', isRequired=True, defaultValue=5500.0)
+        self.matTaPsDPCap1 = AFXFloatKeyword(self.cmd, 'matTaPsDPCap1', isRequired=True, defaultValue=10.0)
+        self.matTaPsDPCap2 = AFXFloatKeyword(self.cmd, 'matTaPsDPCap2', isRequired=True, defaultValue=0.85)
+        self.matTaPsDPCap3 = AFXFloatKeyword(self.cmd, 'matTaPsDPCap3', isRequired=True, defaultValue=0.0)
+        self.matTaPsDPCap4 = AFXFloatKeyword(self.cmd, 'matTaPsDPCap4', isRequired=True, defaultValue=0.01)
+        self.matTaPsDPCap5 = AFXFloatKeyword(self.cmd, 'matTaPsDPCap5', isRequired=True, defaultValue=1.0)
+
+        self.matTaPsKerm1 = AFXFloatKeyword(self.cmd, 'matTaPsKerm1', isRequired=True, defaultValue=6500.0)
+        self.matTaPsKerm2 = AFXFloatKeyword(self.cmd, 'matTaPsKerm2', isRequired=True, defaultValue=-11500.0)
+        self.matTaPsKerm3 = AFXFloatKeyword(self.cmd, 'matTaPsKerm3', isRequired=True, defaultValue=100000.0)
+
+        self.matTaPsMoln1 = AFXFloatKeyword(self.cmd, 'matTaPsMoln1', isRequired=True, defaultValue=5.0)
+        self.matTaPsMoln2 = AFXFloatKeyword(self.cmd, 'matTaPsMoln2', isRequired=True, defaultValue=5700.0)
+        self.matTaPsMoln3 = AFXFloatKeyword(self.cmd, 'matTaPsMoln3', isRequired=True, defaultValue=5000.0)
+        self.matTaPsMoln4 = AFXFloatKeyword(self.cmd, 'matTaPsMoln4', isRequired=True, defaultValue=-3000.0)
+        self.matTaPsMoln5 = AFXFloatKeyword(self.cmd, 'matTaPsMoln5', isRequired=True, defaultValue=-0.196)
+        self.matTaPsMoln6 = AFXFloatKeyword(self.cmd, 'matTaPsMoln6', isRequired=True, defaultValue=3.0)
+        self.matTaPsMoln7 = AFXFloatKeyword(self.cmd, 'matTaPsMoln7', isRequired=True, defaultValue=4.0)
+        self.matTaPsMoln8 = AFXFloatKeyword(self.cmd, 'matTaPsMoln8', isRequired=True, defaultValue=-20000.0)
+        self.matTaPsMoln9 = AFXFloatKeyword(self.cmd, 'matTaPsMoln9', isRequired=True, defaultValue=7000.0)
 
         return(None)
 
