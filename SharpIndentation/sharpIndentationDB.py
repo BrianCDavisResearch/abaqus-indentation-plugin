@@ -169,6 +169,7 @@ class SharpIndentationModelDB(AFXDataDialog):
         self.taMatPlst49 = AFXTextField(hfModel_45, 5, '', tgt=self.form.matTaPsMoln9, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
 
         #-----------------------------------------------------------------------
+        # "The default inputs for this analysis are given in the following units"
 
         tbUnits0 = FXTabItem(tb, i18n.tr('Units'), ic=None, opts=TAB_TOP_NORMAL, x=0, y=0, w=0, h=0, pl=6, pr=6, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
 

@@ -29,7 +29,7 @@ class SharpIndentationModel(AFXForm):
         self.outpFieldInt = AFXIntKeyword(self.cmd, 'outpFieldInt', isRequired=True, defaultValue=50)
         self.outpHistInt = AFXIntKeyword(self.cmd, 'outpHistInt', isRequired=True, defaultValue=50)
         
-        self.anJobName = AFXStringKeyword(self.cmd, 'anJobName', isRequired=True, defaultValue='Sharp_Indentation')        
+        self.anJobName = AFXStringKeyword(self.cmd, 'anJobName', isRequired=True, defaultValue='Sharp_Indentation_Plugin')        
         self.anCPUs = AFXIntKeyword(self.cmd, 'anCPUs', isRequired=True, defaultValue=4)        
         
         
