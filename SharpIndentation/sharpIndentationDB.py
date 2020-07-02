@@ -32,11 +32,11 @@ class SharpIndentationModelDB(AFXDataDialog):
 
         #-----------------------------------------------------------------------
 
-        vfModel_1 = FXVerticalFrame(hfModel_0, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING+10)
+        vfModel_1 = FXVerticalFrame(hfModel_0, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING+23)
 
-        gbModel_11 = FXGroupBox(vfModel_1, i18n.tr('Analysis Type'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING+75, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
-        comboBox = AFXComboBox(gbModel_11, 0, 0, '', tgt=self.form.anType, sel=0, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
-        # comboBox.appendItem('Standard - Static')
+        gbModel_11 = FXGroupBox(vfModel_1, i18n.tr('Analysis Type'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING+93, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        comboBox = AFXComboBox(gbModel_11, 0, 3, '', tgt=self.form.anType, sel=0, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        comboBox.appendItem('Standard - Static')
         comboBox.appendItem('Standard - Quasi-Static')
         comboBox.appendItem('Explicit - Mass Scaling')
 
@@ -51,9 +51,6 @@ class SharpIndentationModelDB(AFXDataDialog):
         vaModel_112 = AFXVerticalAligner(self.remesh0, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=0, pb=0, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
         self.remesh1 = AFXTextField(vaModel_112, 4, 'Frequency', tgt=self.form.meshRemeshing1, sel=0, opts=AFXTEXTFIELD_INTEGER, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         self.remesh2 = AFXTextField(vaModel_112, 4, 'Sweeps', tgt=self.form.meshRemeshing2, sel=0, opts=AFXTEXTFIELD_INTEGER, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
-        # self.remesh0.disable()
-        # self.remesh1.disable()
-        # self.remesh2.disable()
 
         gbModel_113 = FXGroupBox(vfModel_1, i18n.tr('Job Name and Parallelization'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING+1, pr=DEFAULT_SPACING+1, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
         # vaModel_113 = AFXVerticalAligner(gbModel_113, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=0, pb=0, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
@@ -62,7 +59,7 @@ class SharpIndentationModelDB(AFXDataDialog):
 
         #-----------------------------------------------------------------------
 
-        vfModel_2 = FXVerticalFrame(hfModel_0, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING+10)
+        vfModel_2 = FXVerticalFrame(hfModel_0, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
 
         hfModel_21 = FXHorizontalFrame(vfModel_2, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=0, pb=0, hs=DEFAULT_SPACING+48, vs=DEFAULT_SPACING)
 
@@ -81,8 +78,8 @@ class SharpIndentationModelDB(AFXDataDialog):
         hfModel_22 = FXHorizontalFrame(gbModel_213, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=0, pb=0, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
         vaModel_213 = AFXVerticalAligner(hfModel_22, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=35, pb=0, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING+5)
         AFXTextField(vaModel_213, 7, 'Phi: Demi-Angle (deg)', tgt=self.form.partIndDAngle, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
-        AFXTextField(vaModel_213, 7, 'Rf: Tip-Flat (um)', tgt=self.form.partIndFlat, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         AFXTextField(vaModel_213, 7, 'Ri: Tip-Radius (um)', tgt=self.form.partIndRadius, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        AFXTextField(vaModel_213, 7, 'Rf: Tip-Flat (um)', tgt=self.form.partIndFlat, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
 
         tempIcon = afxCreatePNGIcon('%s\\abaqus_plugins\\SharpIndentation\\icon_Model.png' %(os.path.expanduser('~')))
         FXLabel(hfModel_22, '', tempIcon)
@@ -95,21 +92,22 @@ class SharpIndentationModelDB(AFXDataDialog):
 
         #-----------------------------------------------------------------------
 
-        vfModel_3 = FXVerticalFrame(hfModel_2, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        vfModel_3 = FXVerticalFrame(hfModel_2, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING+14)
 
         gbModel_31 = FXGroupBox(vfModel_3, i18n.tr('Indenter Type and Material'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
-        hfModel_42 = FXHorizontalFrame(gbModel_31, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING+43, vs=DEFAULT_SPACING)
+        hfModel_42 = FXHorizontalFrame(gbModel_31, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING+5, hs=DEFAULT_SPACING+43, vs=DEFAULT_SPACING)
 
         self.indTypeComboBox = AFXComboBox(hfModel_42, 0, 2, '', tgt=self.form.partIndType, sel=0, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         self.indTypeComboBox.appendItem('Rigid')
         self.indTypeComboBox.appendItem('Deformable')
 
-        self.indMatComboBox = AFXComboBox(hfModel_42, 0, 3, '', tgt=self.form.matIndName, sel=0, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.indMatComboBox = AFXComboBox(hfModel_42, 0, 3, '', tgt=self.form.matIndNamePre, sel=0, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         self.indMatComboBox.appendItem('Diamond')
         self.indMatComboBox.appendItem('Sapphire')
-        self.indMatComboBox.appendItem('Custom')
+        self.indMatComboBox.appendItem('Other')
 
         vaModel_31 = AFXVerticalAligner(gbModel_31, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        self.indMatTextBox0 = AFXTextField(vaModel_31, 11, "Material Name", tgt=self.form.matIndName, sel=0, opts=AFXTEXTFIELD_STRING, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         self.indMatTextBox1 = AFXTextField(vaModel_31, 11, "Young's Modulus (MPa)", tgt=self.form.matIndEYM, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         self.indMatTextBox2 = AFXTextField(vaModel_31, 11, "Poisson's Ratio", tgt=self.form.matIndEPR, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         self.indMatTextBox3 = AFXTextField(vaModel_31, 11, "Density (mg/um^3)", tgt=self.form.matIndDensity, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
@@ -124,7 +122,7 @@ class SharpIndentationModelDB(AFXDataDialog):
 
         vfModel_4 = FXVerticalFrame(hfModel_2, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
 
-        gbModel_41 = FXGroupBox(vfModel_4, i18n.tr('Test Article Plasticity'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING+3)
+        gbModel_41 = FXGroupBox(vfModel_4, i18n.tr('Test Article Plasticity'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING+0)
         self.indTypeComboBox = AFXComboBox(gbModel_41, 0, 7, '', tgt=self.form.matTaPsModel, sel=0, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         self.indTypeComboBox.appendItem('von Mises')
         self.indTypeComboBox.appendItem('PMP')
@@ -162,11 +160,17 @@ class SharpIndentationModelDB(AFXDataDialog):
         self.taMatPlst42 = AFXTextField(hfModel_45, 5, '', tgt=self.form.matTaPsMoln2, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         self.taMatPlst43 = AFXTextField(hfModel_45, 5, '', tgt=self.form.matTaPsMoln3, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         self.taMatPlst44 = AFXTextField(hfModel_45, 5, '', tgt=self.form.matTaPsMoln4, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
-        self.taMatPlst45 = AFXTextField(hfModel_45, 5, '', tgt=self.form.matTaPsMoln5, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatPlst45 = AFXTextField(hfModel_45, 6, '', tgt=self.form.matTaPsMoln5, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         self.taMatPlst46 = AFXTextField(hfModel_45, 4, '', tgt=self.form.matTaPsMoln6, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         self.taMatPlst47 = AFXTextField(hfModel_45, 4, '', tgt=self.form.matTaPsMoln7, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
-        self.taMatPlst48 = AFXTextField(hfModel_45, 6, '', tgt=self.form.matTaPsMoln8, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.taMatPlst48 = AFXTextField(hfModel_45, 7, '', tgt=self.form.matTaPsMoln8, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         self.taMatPlst49 = AFXTextField(hfModel_45, 5, '', tgt=self.form.matTaPsMoln9, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+
+        self.gbModel_46 = FXGroupBox(gbModel_41, i18n.tr('Fortran Subroutine File'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        self.hfModel_46 = FXHorizontalFrame(self.gbModel_46, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=0, pb=0, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        self.subFileField = AFXTextField(self.hfModel_46, 50, '', tgt=self.form.anFortranfileName, sel=0, opts=AFXTEXTFIELD_STRING, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        fileDialog = FileDialogBox(self.form)
+        self.subFileButton = FXButton(self.hfModel_46, text=i18n.tr('Select File'), tgt=fileDialog, sel=AFXMode.ID_ACTIVATE)
 
         #-----------------------------------------------------------------------
         # "The default inputs for this analysis are given in the following units"
@@ -209,6 +213,12 @@ class SharpIndentationModelDB(AFXDataDialog):
 
         # print >> sys.__stdout__, dir(self.remesh1)
 
+        # print >> sys.__stdout__, self.form.cmd
+        # print >> sys.__stdout__, self.form.cmd.getObjectName()
+        # print >> sys.__stdout__, self.form.cmd.getObjectName().endswith('Model')
+        # print >> sys.__stdout__, self.form.cmd.getObjectName().endswith('Results')
+        # print >> sys.__stdout__, dir(self.form.cmd)
+
         return(None)
 
     #-----------------------------------------------------------------------
@@ -233,9 +243,8 @@ class SharpIndentationModelDB(AFXDataDialog):
 
         if self.form.partIndType.getValue() == 'Rigid':
 
-            self.form.matIndName.setValue('Diamond')
-
             self.indMatComboBox.disable()
+            self.indMatTextBox0.disable()
             self.indMatTextBox1.disable()
             self.indMatTextBox2.disable()
             self.indMatTextBox3.disable()
@@ -243,37 +252,37 @@ class SharpIndentationModelDB(AFXDataDialog):
         elif self.form.partIndType.getValue() == 'Deformable':
 
             self.indMatComboBox.enable()
+            self.indMatTextBox0.enable()
             self.indMatTextBox1.enable()
             self.indMatTextBox2.enable()
             self.indMatTextBox3.enable()
 
         #-----------------------------------------------------------------------
 
-        if self.form.matIndName.getValue() == 'Diamond':
+        # print >> sys.__stdout__, '%s:%s'%(self.form.matIndNamePre.getValue(),self.indMatComboBox.getItemText(self.indMatComboBox.getCurrentItem()))
 
-            self.form.matIndEYM.setValue(1050e3)
-            self.form.matIndEPR.setValue(0.20)
-            self.form.matIndDensity.setValue(3.52e-9)
+        if self.form.matIndNamePre.getValue() != self.indMatComboBox.getItemText(self.indMatComboBox.getCurrentItem()):
 
-            self.indMatTextBox1.disable()
-            self.indMatTextBox2.disable()
-            self.indMatTextBox3.disable()
+            if self.indMatComboBox.getItemText(self.indMatComboBox.getCurrentItem()) == 'Diamond':
 
-        elif self.form.matIndName.getValue() == 'Sapphire':
+                self.form.matIndNamePre.setValue('Diamond')
+                self.form.matIndName.setValue('Diamond')
+                self.form.matIndEYM.setValue(1050e3)
+                self.form.matIndEPR.setValue(0.20)
+                self.form.matIndDensity.setValue(3.52e-9)
 
-            self.form.matIndEYM.setValue(345e3)
-            self.form.matIndEPR.setValue(0.29)
-            self.form.matIndDensity.setValue(3.98e-9)
+            elif self.indMatComboBox.getItemText(self.indMatComboBox.getCurrentItem()) == 'Sapphire':
 
-            self.indMatTextBox1.disable()
-            self.indMatTextBox2.disable()
-            self.indMatTextBox3.disable()
+                self.form.matIndNamePre.setValue('Sapphire')
+                self.form.matIndName.setValue('Sapphire')
+                self.form.matIndEYM.setValue(345e3)
+                self.form.matIndEPR.setValue(0.29)
+                self.form.matIndDensity.setValue(3.98e-9)
 
-        elif self.form.matIndName.getValue() == 'Custom':
+            elif self.indMatComboBox.getItemText(self.indMatComboBox.getCurrentItem()) == 'Other':
 
-            self.indMatTextBox1.enable()
-            self.indMatTextBox2.enable()
-            self.indMatTextBox3.enable()
+                self.form.matIndNamePre.setValue('Other')
+                self.form.matIndName.setValue('Other')
 
         #-----------------------------------------------------------------------
 
@@ -378,6 +387,20 @@ class SharpIndentationModelDB(AFXDataDialog):
             self.taMatPlst47.disable()
             self.taMatPlst48.disable()
             self.taMatPlst49.disable()
+
+        if self.form.matTaPsModel.getValue().startswith('Kermouche') or self.form.matTaPsModel.getValue().startswith('Molnar'):
+
+            self.gbModel_46.enable()
+            self.hfModel_46.enable()
+            self.subFileField.enable()
+            self.subFileButton.enable()
+
+        else:
+
+            self.gbModel_46.disable()
+            self.hfModel_46.disable()
+            self.subFileField.disable()
+            self.subFileButton.disable()
 
         return(None)
 
@@ -525,7 +548,28 @@ class FileDialogBox(FXObject):
 
         FXObject.__init__(self)
 
-        FXMAPFUNC(self, SEL_COMMAND, AFXMode.ID_ACTIVATE, FileDialogBox.odbDialogBox)
+        # print >> sys.__stdout__, self.form.cmd.getObjectName().endswith('Model')
+        # print >> sys.__stdout__, self.form.cmd.getObjectName().endswith('Results')
+
+        if self.form.cmd.getObjectName().endswith('Model'):
+
+            FXMAPFUNC(self, SEL_COMMAND, AFXMode.ID_ACTIVATE, FileDialogBox.subDialogBox)
+
+        elif self.form.cmd.getObjectName().endswith('Results'):
+
+            FXMAPFUNC(self, SEL_COMMAND, AFXMode.ID_ACTIVATE, FileDialogBox.odbDialogBox)
+
+        return(None)
+
+    #-----------------------------------------------------------------------
+
+    def subDialogBox(self, sender, sel, ptr):
+
+        tempDialog = AFXFileSelectorDialog(getAFXApp().getAFXMainWindow(), 'Select Subroutine File', self.form.anFortranfileName, self.form.anFortranReadOnly, AFXSELECTFILE_EXISTING, 'Abaqus Subroutine File (*)', AFXIntTarget(0))
+
+        tempDialog.create()
+
+        tempDialog.showModal()
 
         return(None)
 
@@ -533,7 +577,7 @@ class FileDialogBox(FXObject):
 
     def odbDialogBox(self, sender, sel, ptr):
 
-        tempDialog = AFXFileSelectorDialog(getAFXApp().getAFXMainWindow(), 'Select an ODB File or Directory', self.form.odbPath, self.form.odbReadOnly, AFXSELECTFILE_MULTIPLE_ALL, 'Abaqus ODB Files (*.odb)', AFXIntTarget(0))
+        tempDialog = AFXFileSelectorDialog(getAFXApp().getAFXMainWindow(), 'Select ODB File(s)', self.form.odbPath, self.form.odbReadOnly, AFXSELECTFILE_MULTIPLE_ALL, 'Abaqus ODB Files (*.odb)', AFXIntTarget(0))
 
         tempDialog.create()
 

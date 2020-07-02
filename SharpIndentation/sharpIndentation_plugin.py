@@ -46,7 +46,8 @@ class SharpIndentationModel(AFXForm):
         #-----------------------------------------------------------------------
 
         self.partIndType = AFXStringKeyword(self.cmd, 'partIndType', isRequired=True, defaultValue='Rigid')
-        
+
+        self.matIndNamePre = AFXStringKeyword(self.cmd, 'matIndNamePre', isRequired=False, defaultValue='Diamond')        
         self.matIndName = AFXStringKeyword(self.cmd, 'matIndName', isRequired=True, defaultValue='Diamond')
         self.matIndEYM = AFXFloatKeyword(self.cmd, 'matIndEYM', isRequired=True, defaultValue=1050e3)
         self.matIndEPR = AFXFloatKeyword(self.cmd, 'matIndEPR', isRequired=True, defaultValue=0.20)
@@ -84,6 +85,9 @@ class SharpIndentationModel(AFXForm):
         self.matTaPsMoln7 = AFXFloatKeyword(self.cmd, 'matTaPsMoln7', isRequired=True, defaultValue=4.0)
         self.matTaPsMoln8 = AFXFloatKeyword(self.cmd, 'matTaPsMoln8', isRequired=True, defaultValue=-20000.0)
         self.matTaPsMoln9 = AFXFloatKeyword(self.cmd, 'matTaPsMoln9', isRequired=True, defaultValue=7000.0)
+        
+        self.anFortranfileName = AFXStringKeyword(self.cmd, 'anFortranfileName', isRequired=True, defaultValue='')
+        self.anFortranReadOnly = AFXBoolKeyword(self.cmd, 'anFortranReadOnly', isRequired=True, defaultValue=True)
 
         return(None)
 
