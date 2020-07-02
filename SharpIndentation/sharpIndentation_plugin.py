@@ -28,35 +28,35 @@ class SharpIndentationModel(AFXForm):
 
         self.outpFieldInt = AFXIntKeyword(self.cmd, 'outpFieldInt', isRequired=True, defaultValue=50)
         self.outpHistInt = AFXIntKeyword(self.cmd, 'outpHistInt', isRequired=True, defaultValue=50)
-        
-        self.anJobName = AFXStringKeyword(self.cmd, 'anJobName', isRequired=True, defaultValue='Sharp_Indentation_Plugin')        
-        self.anCPUs = AFXIntKeyword(self.cmd, 'anCPUs', isRequired=True, defaultValue=4)        
-        
-        
+
+        self.anJobName = AFXStringKeyword(self.cmd, 'anJobName', isRequired=True, defaultValue='Sharp_Indentation_Plugin')
+        self.anCPUs = AFXIntKeyword(self.cmd, 'anCPUs', isRequired=True, defaultValue=4)
+
+
         self.bcIndDepth = AFXFloatKeyword(self.cmd, 'bcIndDepth', isRequired=True, defaultValue=3.0)
-        self.contFriciton = AFXFloatKeyword(self.cmd, 'contFriciton', isRequired=True, defaultValue=0.0)        
-           
+        self.contFriciton = AFXFloatKeyword(self.cmd, 'contFriciton', isRequired=True, defaultValue=0.0)
+
         self.meshDivider = AFXIntKeyword(self.cmd, 'meshDivider', isRequired=True, defaultValue=50)
-        self.partTaScale = AFXIntKeyword(self.cmd, 'partTaScale', isRequired=True, defaultValue=1)           
-           
+        self.partTaScale = AFXIntKeyword(self.cmd, 'partTaScale', isRequired=True, defaultValue=1)
+
         self.partIndDAngle = AFXFloatKeyword(self.cmd, 'partIndDAngle', isRequired=True, defaultValue=70.3)
         self.partIndFlat = AFXFloatKeyword(self.cmd, 'partIndFlat', isRequired=True, defaultValue=0.0)
-        self.partIndRadius = AFXFloatKeyword(self.cmd, 'partIndRadius', isRequired=True, defaultValue=0.0)            
-      
+        self.partIndRadius = AFXFloatKeyword(self.cmd, 'partIndRadius', isRequired=True, defaultValue=0.0)
+
         #-----------------------------------------------------------------------
 
         self.partIndType = AFXStringKeyword(self.cmd, 'partIndType', isRequired=True, defaultValue='Rigid')
 
-        self.matIndNamePre = AFXStringKeyword(self.cmd, 'matIndNamePre', isRequired=False, defaultValue='Diamond')        
+        self.matIndNamePre = AFXStringKeyword(self.cmd, 'matIndNamePre', isRequired=False, defaultValue='Diamond')
         self.matIndName = AFXStringKeyword(self.cmd, 'matIndName', isRequired=True, defaultValue='Diamond')
         self.matIndEYM = AFXFloatKeyword(self.cmd, 'matIndEYM', isRequired=True, defaultValue=1050e3)
         self.matIndEPR = AFXFloatKeyword(self.cmd, 'matIndEPR', isRequired=True, defaultValue=0.20)
-        self.matIndDensity = AFXFloatKeyword(self.cmd, 'matIndDensity', isRequired=True, defaultValue=3.52e-9)        
+        self.matIndDensity = AFXFloatKeyword(self.cmd, 'matIndDensity', isRequired=True, defaultValue=3.52e-9)
 
         self.matTaName = AFXStringKeyword(self.cmd, 'matTaName', isRequired=True, defaultValue='Fused_Silica')
         self.matTaEYM = AFXFloatKeyword(self.cmd, 'matTaEYM', isRequired=True, defaultValue=70.0e3)
         self.matTaEPR = AFXFloatKeyword(self.cmd, 'matTaEPR', isRequired=True, defaultValue=0.15)
-        self.matTaDensity = AFXFloatKeyword(self.cmd, 'matTaDensity', isRequired=True, defaultValue=2.20e-9)  
+        self.matTaDensity = AFXFloatKeyword(self.cmd, 'matTaDensity', isRequired=True, defaultValue=2.20e-9)
 
         self.matTaPsModel = AFXStringKeyword(self.cmd, 'matTaPsModel', isRequired=True, defaultValue='von Mises')
 
@@ -85,7 +85,7 @@ class SharpIndentationModel(AFXForm):
         self.matTaPsMoln7 = AFXFloatKeyword(self.cmd, 'matTaPsMoln7', isRequired=True, defaultValue=4.0)
         self.matTaPsMoln8 = AFXFloatKeyword(self.cmd, 'matTaPsMoln8', isRequired=True, defaultValue=-20000.0)
         self.matTaPsMoln9 = AFXFloatKeyword(self.cmd, 'matTaPsMoln9', isRequired=True, defaultValue=7000.0)
-        
+
         self.anFortranfileName = AFXStringKeyword(self.cmd, 'anFortranfileName', isRequired=True, defaultValue='')
         self.anFortranReadOnly = AFXBoolKeyword(self.cmd, 'anFortranReadOnly', isRequired=True, defaultValue=True)
 
