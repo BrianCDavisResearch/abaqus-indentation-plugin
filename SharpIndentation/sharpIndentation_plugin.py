@@ -43,6 +43,10 @@ class SharpIndentationModel(AFXForm):
         self.partIndFlat = AFXFloatKeyword(self.cmd, 'partIndFlat', isRequired=True, defaultValue=0.0)
         self.partIndRadius = AFXFloatKeyword(self.cmd, 'partIndRadius', isRequired=True, defaultValue=0.0)
 
+        self.boolCSV = AFXBoolKeyword(self.cmd, 'boolCSV', isRequired=True, defaultValue=False)
+        self.anCSVfileName = AFXStringKeyword(self.cmd, 'anCSVfileName', isRequired=True, defaultValue='')
+        self.anCSVReadOnly = AFXBoolKeyword(self.cmd, 'anCSVReadOnly', isRequired=True, defaultValue=True)
+
         #-----------------------------------------------------------------------
 
         self.partIndType = AFXStringKeyword(self.cmd, 'partIndType', isRequired=True, defaultValue='Rigid')
