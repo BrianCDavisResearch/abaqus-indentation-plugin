@@ -91,7 +91,7 @@ class SharpIndentationModelDB(AFXDataDialog):
         hfModel_215 = FXHorizontalFrame(gbModel_214, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=0, pb=0, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
         self.boolCSVButton = FXCheckButton(hfModel_215, '', tgt=self.form.boolCSV, sel=0, opts=CHECKBUTTON_NORMAL, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         self.boolCSVButton.setLayoutHints(LAYOUT_CENTER_Y)
-        self.csvFileField = AFXTextField(hfModel_215, 50, '', tgt=self.form.anCSVfileName, sel=0, opts=AFXTEXTFIELD_STRING, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.csvFileField = AFXTextField(hfModel_215, 40, '', tgt=self.form.anCSVfileName, sel=0, opts=AFXTEXTFIELD_STRING, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         fileDialog = FileDialogBox(self.form,type='csv')
         self.csvFileButton = FXButton(hfModel_215, text=i18n.tr('Select File'), tgt=fileDialog, sel=AFXMode.ID_ACTIVATE)
         gbModel_214.setLayoutHints(LAYOUT_FILL_X)
