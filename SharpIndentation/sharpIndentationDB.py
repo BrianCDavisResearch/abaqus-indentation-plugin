@@ -616,7 +616,7 @@ class FileDialogBox(FXObject):
 
     def csvDialogBox(self, sender, sel, ptr):
 
-        tempDialog = AFXFileSelectorDialog(getAFXApp().getAFXMainWindow(), 'Select "All-Inputs" CSV File', self.form.anCSVfileName, self.form.anCSVReadOnly, AFXSELECTFILE_EXISTING, '"All-Inputs" CSV File (*All-Inputs.csv)', AFXIntTarget(0))
+        tempDialog = AFXFileSelectorDialog(getAFXApp().getAFXMainWindow(), 'Select "All-Inputs" CSV File', self.form.anCSVfileName, self.form.anCSVReadOnly, AFXSELECTFILE_EXISTING, '"All-Inputs" CSV File (*All-Inputs.csv)\nAll Files (*)', AFXIntTarget(0))
 
         tempDialog.create()
 
@@ -628,7 +628,7 @@ class FileDialogBox(FXObject):
 
     def subDialogBox(self, sender, sel, ptr):
 
-        tempDialog = AFXFileSelectorDialog(getAFXApp().getAFXMainWindow(), 'Select Subroutine File', self.form.anFortranfileName, self.form.anFortranReadOnly, AFXSELECTFILE_EXISTING, 'Fortran Subroutine File (*.f,*.for)', AFXIntTarget(0))
+        tempDialog = AFXFileSelectorDialog(getAFXApp().getAFXMainWindow(), 'Select Subroutine File', self.form.anFortranfileName, self.form.anFortranReadOnly, AFXSELECTFILE_EXISTING, 'Fortran Subroutine File (*.f,*.for)\nAll Files (*)', AFXIntTarget(0))
 
         tempDialog.create()
 
@@ -640,7 +640,7 @@ class FileDialogBox(FXObject):
 
     def odbDialogBox(self, sender, sel, ptr):
 
-        tempDialog = AFXFileSelectorDialog(getAFXApp().getAFXMainWindow(), 'Select ODB File(s)', self.form.odbPath, self.form.odbReadOnly, AFXSELECTFILE_MULTIPLE_ALL, 'Abaqus ODB Files (*.odb)', AFXIntTarget(0))
+        tempDialog = AFXFileSelectorDialog(getAFXApp().getAFXMainWindow(), 'Select ODB File(s)', self.form.odbPath, self.form.odbReadOnly, AFXSELECTFILE_MULTIPLE_ALL, 'Abaqus ODB Files (*.odb)\nAll Files (*)', AFXIntTarget(0))
 
         tempDialog.create()
 
