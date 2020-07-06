@@ -88,16 +88,15 @@ class SharpIndentationModelDB(AFXDataDialog):
 
         self.gbModel_214 = FXGroupBox(vfModel_2, i18n.tr('Build Model from "All-Inputs" CSV file'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
         self.hfModel_215 = FXHorizontalFrame(self.gbModel_214, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=0, pb=0, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
-        self.boolCSVButton = FXCheckButton(self.hfModel_215, '', tgt=self.form.boolCSV, sel=0, opts=CHECKBUTTON_NORMAL, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
-        self.boolCSVButton.setLayoutHints(LAYOUT_CENTER_Y)
-        self.csvFileField = AFXTextField(self.hfModel_215, 40, '', tgt=self.form.anCSVfileName, sel=0, opts=AFXTEXTFIELD_STRING, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.anRerunCSVButton = FXCheckButton(self.hfModel_215, '', tgt=self.form.anRerunCSV, sel=0, opts=CHECKBUTTON_NORMAL, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.anRerunCSVButton.setLayoutHints(LAYOUT_CENTER_Y)
+        self.anRerunCSVfileNameField = AFXTextField(self.hfModel_215, 40, '', tgt=self.form.anRerunCSVfileName, sel=0, opts=AFXTEXTFIELD_STRING, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         fileDialog = FileDialogBox(self.form,type='csv')
-        self.csvFileButton = FXButton(self.hfModel_215, text=i18n.tr('Select File'), tgt=fileDialog, sel=AFXMode.ID_ACTIVATE)
+        self.anRerunCSVfileNameButton = FXButton(self.hfModel_215, text=i18n.tr('Select File'), tgt=fileDialog, sel=AFXMode.ID_ACTIVATE)
         self.gbModel_214.setLayoutHints(LAYOUT_FILL_X)
 
-        self.gbModel_214.disable() #####################################
-        self.hfModel_215.disable() #####################################
-        self.boolCSVButton.disable() #####################################
+        self.anRerunCSVfileNameField.disable()
+        self.anRerunCSVfileNameButton.disable()
 
         #-----------------------------------------------------------------------
 
@@ -261,19 +260,15 @@ class SharpIndentationModelDB(AFXDataDialog):
 
         #-----------------------------------------------------------------------
 
-        if self.form.boolCSV.getValue() == True:
+        if self.anRerunCSVButton.getCheck() == True:
 
-            self.gbModel_214.enable()
-            self.hfModel_215.enable()
-            self.csvFileField.enable()
-            self.csvFileButton.enable()
+            self.anRerunCSVfileNameField.enable()
+            self.anRerunCSVfileNameButton.enable()
 
         else:
 
-            self.gbModel_214.disable()
-            self.hfModel_215.disable()
-            self.csvFileField.disable()
-            self.csvFileButton.disable()
+            self.anRerunCSVfileNameField.disable()
+            self.anRerunCSVfileNameButton.disable()
 
         #-----------------------------------------------------------------------
 
@@ -628,7 +623,7 @@ class FileDialogBox(FXObject):
 
     def csvDialogBox(self, sender, sel, ptr):
 
-        tempDialog = AFXFileSelectorDialog(getAFXApp().getAFXMainWindow(), 'Select "All-Inputs" CSV File', self.form.anCSVfileName, self.form.anCSVReadOnly, AFXSELECTFILE_EXISTING, '"All-Inputs" CSV File (*All-Inputs.csv)\nAll Files (*)', AFXIntTarget(0))
+        tempDialog = AFXFileSelectorDialog(getAFXApp().getAFXMainWindow(), 'Select "All-Inputs" CSV File', self.form.anRerunCSVfileName, self.form.anRerunCSVfileNameReadOnly, AFXSELECTFILE_EXISTING, '"All-Inputs" CSV File (*All-Inputs.csv)\nAll Files (*)', AFXIntTarget(0))
 
         tempDialog.create()
 
