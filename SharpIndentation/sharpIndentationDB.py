@@ -16,8 +16,6 @@ class SharpIndentationModelDB(AFXDataDialog):
 
     def __init__(self,form):
 
-        import os
-
         self.form = form
 
         AFXDataDialog.__init__(self, self.form, i18n.tr('Sharp Indentation Model'), self.OK|self.APPLY|self.DEFAULTS|self.CANCEL)
@@ -83,21 +81,22 @@ class SharpIndentationModelDB(AFXDataDialog):
         AFXTextField(vaModel_213, 7, 'Rf: Tip-Flat (um)', tgt=self.form.partIndFlat, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         vaModel_213.setLayoutHints(LAYOUT_CENTER_Y)
 
+        # import os
         # tempIcon = afxCreatePNGIcon('%s\\abaqus_plugins\\SharpIndentation\\icon_Model.png' %(os.path.expanduser('~')))
         tempIcon = FXXPMIcon(getAFXApp(), iconIndenterGeometry)
         FXLabel(hfModel_22, '', tempIcon)
 
-        gbModel_214 = FXGroupBox(vfModel_2, i18n.tr('Build Model from "All-Inputs" CSV file'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
-        hfModel_215 = FXHorizontalFrame(gbModel_214, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=0, pb=0, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
-        self.boolCSVButton = FXCheckButton(hfModel_215, '', tgt=self.form.boolCSV, sel=0, opts=CHECKBUTTON_NORMAL, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.gbModel_214 = FXGroupBox(vfModel_2, i18n.tr('Build Model from "All-Inputs" CSV file'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        self.hfModel_215 = FXHorizontalFrame(self.gbModel_214, opts=0, x=0, y=0, w=0, h=0, pl=0, pr=0, pt=0, pb=0, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
+        self.boolCSVButton = FXCheckButton(self.hfModel_215, '', tgt=self.form.boolCSV, sel=0, opts=CHECKBUTTON_NORMAL, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         self.boolCSVButton.setLayoutHints(LAYOUT_CENTER_Y)
-        self.csvFileField = AFXTextField(hfModel_215, 40, '', tgt=self.form.anCSVfileName, sel=0, opts=AFXTEXTFIELD_STRING, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.csvFileField = AFXTextField(self.hfModel_215, 40, '', tgt=self.form.anCSVfileName, sel=0, opts=AFXTEXTFIELD_STRING, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         fileDialog = FileDialogBox(self.form,type='csv')
-        self.csvFileButton = FXButton(hfModel_215, text=i18n.tr('Select File'), tgt=fileDialog, sel=AFXMode.ID_ACTIVATE)
-        gbModel_214.setLayoutHints(LAYOUT_FILL_X)
+        self.csvFileButton = FXButton(self.hfModel_215, text=i18n.tr('Select File'), tgt=fileDialog, sel=AFXMode.ID_ACTIVATE)
+        self.gbModel_214.setLayoutHints(LAYOUT_FILL_X)
 
-        gbModel_214.disable() #####################################
-        hfModel_215.disable() #####################################
+        self.gbModel_214.disable() #####################################
+        self.hfModel_215.disable() #####################################
         self.boolCSVButton.disable() #####################################
 
         #-----------------------------------------------------------------------
@@ -234,7 +233,6 @@ class SharpIndentationModelDB(AFXDataDialog):
         #-----------------------------------------------------------------------
 
         # print >> sys.__stdout__, dir(gbModel_211)
-
         # print >> sys.__stdout__, self.form.cmd
         # print >> sys.__stdout__, self.form.cmd.getObjectName()
         # print >> sys.__stdout__, self.form.cmd.getObjectName().endswith('Model')
@@ -265,11 +263,15 @@ class SharpIndentationModelDB(AFXDataDialog):
 
         if self.form.boolCSV.getValue() == True:
 
+            self.gbModel_214.enable()
+            self.hfModel_215.enable()
             self.csvFileField.enable()
             self.csvFileButton.enable()
 
         else:
 
+            self.gbModel_214.disable()
+            self.hfModel_215.disable()
             self.csvFileField.disable()
             self.csvFileButton.disable()
 
@@ -508,13 +510,21 @@ class SharpIndentationResultsDB(AFXDataDialog):
         tempText = i18n.tr('S22, Lateral Crack Driving Stress (entire results-zone)')
         self.boolAreaS22Button = FXCheckButton(gb2, tempText, tgt=self.form.boolAreaS22, sel=0, opts=CHECKBUTTON_NORMAL, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
 
+        hf3a = FXHorizontalFrame(gb2, LAYOUT_FILL_X, 0,0,0,0, 0,0,0,0)
+        FXLabel(hf3a, i18n.tr('PE Limit'), pl=DEFAULT_PAD+20, pr=DEFAULT_PAD, pt=DEFAULT_PAD+3, pb=DEFAULT_PAD)
+        self.S22limitPEfield = AFXTextField(hf3a, 10, '', tgt=self.form.boolAreaS22limitPE, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.S22limitPEfield.disable()
+        FXLabel(hf3a, i18n.tr('S22 Limit'), pl=DEFAULT_PAD+20, pr=DEFAULT_PAD, pt=DEFAULT_PAD+3, pb=DEFAULT_PAD)
+        self.S22limitfield = AFXTextField(hf3a, 10, '', tgt=self.form.boolAreaS22limit, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.S22limitfield.disable()
+
         tempText = i18n.tr('Plastic Deformation (entire results-zone)')
         self.boolAreaPlasticButton = FXCheckButton(gb2, tempText, tgt=self.form.boolAreaPlastic, sel=0, opts=CHECKBUTTON_NORMAL, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
 
-        hf3 = FXHorizontalFrame(gb2, LAYOUT_FILL_X, 0,0,0,0, 0,0,0,0)
-        FXLabel(hf3, i18n.tr('PE Limit'), pl=DEFAULT_PAD+20, pr=DEFAULT_PAD, pt=DEFAULT_PAD+3, pb=DEFAULT_PAD)
-        self.limitPEField = AFXTextField(hf3, 10, '', tgt=self.form.limitPE, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
-        self.limitPEField.disable()
+        hf3b = FXHorizontalFrame(gb2, LAYOUT_FILL_X, 0,0,0,0, 0,0,0,0)
+        FXLabel(hf3b, i18n.tr('PE Limit'), pl=DEFAULT_PAD+20, pr=DEFAULT_PAD, pt=DEFAULT_PAD+3, pb=DEFAULT_PAD)
+        self.PlasticlimitPEfield = AFXTextField(hf3b, 10, '', tgt=self.form.boolAreaPlasticlimitPE, sel=0, opts=AFXTEXTFIELD_FLOAT, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        self.PlasticlimitPEfield.disable()
 
         #-----------------------------------------------------------------------
 
@@ -561,13 +571,23 @@ class SharpIndentationResultsDB(AFXDataDialog):
 
     def processUpdates(self):
 
-        if self.boolAreaPlasticButton.getCheck() == True:
+        if self.boolAreaS22Button.getCheck() == True:
 
-            self.limitPEField.enable()
+            self.S22limitPEfield.enable()
+            self.S22limitfield.enable()
 
         else:
 
-            self.limitPEField.disable()
+            self.S22limitPEfield.disable()
+            self.S22limitfield.disable()
+
+        if self.boolAreaPlasticButton.getCheck() == True:
+
+            self.PlasticlimitPEfield.enable()
+
+        else:
+
+            self.PlasticlimitPEfield.disable()
 
         return(None)
 
@@ -589,14 +609,6 @@ class FileDialogBox(FXObject):
 
         # print >> sys.__stdout__, self.form.cmd.getObjectName().endswith('Model')
         # print >> sys.__stdout__, self.form.cmd.getObjectName().endswith('Results')
-
-        # if self.form.cmd.getObjectName().endswith('Model'):
-
-            # FXMAPFUNC(self, SEL_COMMAND, AFXMode.ID_ACTIVATE, FileDialogBox.subDialogBox)
-
-        # elif self.form.cmd.getObjectName().endswith('Results'):
-
-            # FXMAPFUNC(self, SEL_COMMAND, AFXMode.ID_ACTIVATE, FileDialogBox.odbDialogBox)
 
         if tempType == 'csv':
 

@@ -23,29 +23,28 @@ class SharpIndentationModel(AFXForm):
 
         self.anType = AFXStringKeyword(self.cmd, 'anType', isRequired=True, defaultValue='Standard - Quasi-Static')
 
-        self.meshRemeshing1 = AFXIntKeyword(self.cmd, 'meshRemeshing1', isRequired=True, defaultValue=1)
-        self.meshRemeshing2 = AFXIntKeyword(self.cmd, 'meshRemeshing2', isRequired=True, defaultValue=2)
+        self.bcIndDepth = AFXFloatKeyword(self.cmd, 'bcIndDepth', isRequired=True, defaultValue=3.0)
+        self.contFriciton = AFXFloatKeyword(self.cmd, 'contFriciton', isRequired=True, defaultValue=0.0)
 
         self.outpFieldInt = AFXIntKeyword(self.cmd, 'outpFieldInt', isRequired=True, defaultValue=50)
         self.outpHistInt = AFXIntKeyword(self.cmd, 'outpHistInt', isRequired=True, defaultValue=50)
 
-        self.anJobName = AFXStringKeyword(self.cmd, 'anJobName', isRequired=True, defaultValue='Sharp_Indentation_Plugin')
-        self.anCPUs = AFXIntKeyword(self.cmd, 'anCPUs', isRequired=True, defaultValue=4)
-
-
-        self.bcIndDepth = AFXFloatKeyword(self.cmd, 'bcIndDepth', isRequired=True, defaultValue=3.0)
-        self.contFriciton = AFXFloatKeyword(self.cmd, 'contFriciton', isRequired=True, defaultValue=0.0)
-
         self.meshDivider = AFXIntKeyword(self.cmd, 'meshDivider', isRequired=True, defaultValue=50)
         self.partTaScale = AFXIntKeyword(self.cmd, 'partTaScale', isRequired=True, defaultValue=1)
+
+        self.meshRemeshing1 = AFXIntKeyword(self.cmd, 'meshRemeshing1', isRequired=True, defaultValue=1)
+        self.meshRemeshing2 = AFXIntKeyword(self.cmd, 'meshRemeshing2', isRequired=True, defaultValue=2)
+
+        self.anJobName = AFXStringKeyword(self.cmd, 'anJobName', isRequired=True, defaultValue='Sharp_Indentation_Plugin')
+        self.anCPUs = AFXIntKeyword(self.cmd, 'anCPUs', isRequired=True, defaultValue=4)
 
         self.partIndDAngle = AFXFloatKeyword(self.cmd, 'partIndDAngle', isRequired=True, defaultValue=70.3)
         self.partIndFlat = AFXFloatKeyword(self.cmd, 'partIndFlat', isRequired=True, defaultValue=0.0)
         self.partIndRadius = AFXFloatKeyword(self.cmd, 'partIndRadius', isRequired=True, defaultValue=0.0)
 
-        self.boolCSV = AFXBoolKeyword(self.cmd, 'boolCSV', isRequired=True, defaultValue=False)
+        self.boolCSV = AFXBoolKeyword(self.cmd, 'boolCSV', isRequired=False, defaultValue=False)
         self.anCSVfileName = AFXStringKeyword(self.cmd, 'anCSVfileName', isRequired=True, defaultValue='')
-        self.anCSVReadOnly = AFXBoolKeyword(self.cmd, 'anCSVReadOnly', isRequired=True, defaultValue=True)
+        self.anCSVReadOnly = AFXBoolKeyword(self.cmd, 'anCSVReadOnly', isRequired=False, defaultValue=True)
 
         #-----------------------------------------------------------------------
 
@@ -91,7 +90,7 @@ class SharpIndentationModel(AFXForm):
         self.matTaPsMoln9 = AFXFloatKeyword(self.cmd, 'matTaPsMoln9', isRequired=True, defaultValue=7000.0)
 
         self.anFortranfileName = AFXStringKeyword(self.cmd, 'anFortranfileName', isRequired=True, defaultValue='')
-        self.anFortranReadOnly = AFXBoolKeyword(self.cmd, 'anFortranReadOnly', isRequired=True, defaultValue=True)
+        self.anFortranReadOnly = AFXBoolKeyword(self.cmd, 'anFortranReadOnly', isRequired=False, defaultValue=True)
 
         return(None)
 
@@ -131,8 +130,10 @@ class SharpIndentationResults(AFXForm):
 
         self.boolAreaInvariants = AFXBoolKeyword(self.cmd, 'boolAreaInvariants', isRequired=True, defaultValue=False)
         self.boolAreaS22 = AFXBoolKeyword(self.cmd, 'boolAreaS22', isRequired=True, defaultValue=False)
+        self.boolAreaS22limitPE = AFXFloatKeyword(self.cmd, 'boolAreaS22limitPE', isRequired=True, defaultValue=2e-03)
+        self.boolAreaS22limit = AFXFloatKeyword(self.cmd, 'boolAreaS22limit', isRequired=True, defaultValue=50.0)
         self.boolAreaPlastic = AFXBoolKeyword(self.cmd, 'boolAreaPlastic', isRequired=True, defaultValue=False)
-        self.limitPE = AFXFloatKeyword(self.cmd, 'limitPE', isRequired=True, defaultValue=1e-05)
+        self.boolAreaPlasticlimitPE = AFXFloatKeyword(self.cmd, 'boolAreaPlasticlimitPE', isRequired=True, defaultValue=1e-05)
 
         return(None)
 
@@ -159,7 +160,7 @@ pluginDesc = i18n.tr('A very simple description...') ###########################
 
 absPath = os.path.abspath(__file__) ################################
 absDir  = os.path.dirname(absPath) ################################
-helpUrl = os.path.join(absDir, 'plate-help.html') #link to YouTube account? ################################
+helpUrl = os.path.join(absDir, 'plate-help.html') #link to YouTube account? Yes! ################################
 
 modelIcon = FXXPMIcon(getAFXApp(), iconSharpIndentationModel)
 
