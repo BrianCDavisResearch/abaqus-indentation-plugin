@@ -167,13 +167,13 @@ modelIcon = FXXPMIcon(getAFXApp(), iconSharpIndentationModel)
 toolset.registerGuiMenuButton(
     object=SharpIndentationModel(toolset), buttonText=i18n.tr('Sharp Indentation|Model: Pre-Processor'),
     kernelInitString='import LP_Indentation_Model', icon=modelIcon, version='0.1', author='Brian C. Davis',
-    applicableModules = ['Part', 'Property', 'Assembly', 'Step', 'Interaction', 'Load', 'Mesh', 'Job'],
+    applicableModules = ['Part', 'Property', 'Assembly', 'Step', 'Interaction', 'Load', 'Mesh', 'Optimization','Job','Visualization','Sketch'],
     description=pluginDesc, helpUrl=helpUrl)
 
 toolset.registerGuiToolButton('Sharp Indentation',
     object=SharpIndentationModel(toolset), buttonText=i18n.tr('\tSharp Indentation\nBuild a Model'),
     kernelInitString='import LP_Indentation_Model', icon=modelIcon, version='0.1', author='Brian C. Davis',
-    applicableModules = ['Part', 'Property', 'Assembly', 'Step', 'Interaction', 'Load', 'Mesh', 'Job'],
+    applicableModules = ['Part', 'Property', 'Assembly', 'Step', 'Interaction', 'Load', 'Mesh', 'Optimization','Job','Visualization','Sketch'],
     description=pluginDesc, helpUrl=helpUrl)
 
 #-----------------------------------------------------------------------
@@ -183,13 +183,13 @@ resultsIcon = FXXPMIcon(getAFXApp(), iconSharpIndentationResults)
 toolset.registerGuiMenuButton(
     object=SharpIndentationResults(toolset), buttonText=i18n.tr('Sharp Indentation|Results: Post-Processor'),
     kernelInitString='import LP_Indentation_Results', icon=resultsIcon, version='0.1', author='Brian C. Davis',
-    applicableModules = ['Part', 'Property', 'Assembly', 'Step', 'Interaction', 'Load', 'Mesh', 'Job'],
+    applicableModules = ['Part', 'Property', 'Assembly', 'Step', 'Interaction', 'Load', 'Mesh', 'Optimization','Job','Visualization','Sketch'],
     description=pluginDesc, helpUrl=helpUrl)
 
 toolset.registerGuiToolButton('Sharp Indentation',
     object=SharpIndentationResults(toolset), buttonText=i18n.tr('\tSharp Indentation\nProcess Results'),
     kernelInitString='import LP_Indentation_Results', icon=resultsIcon, version='0.1', author='Brian C. Davis',
-    applicableModules = ['Part', 'Property', 'Assembly', 'Step', 'Interaction', 'Load', 'Mesh', 'Job'],
+    applicableModules = ['Part', 'Property', 'Assembly', 'Step', 'Interaction', 'Load', 'Mesh', 'Optimization','Job','Visualization','Sketch'],
     description=pluginDesc, helpUrl=helpUrl)
 
 #-----------------------------------------------------------------------
