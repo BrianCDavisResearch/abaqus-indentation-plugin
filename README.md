@@ -1,5 +1,5 @@
 # abaqus-indentation-plugin
-Abaqus plugin for indentation FEA simulation
+Abaqus plugin for FEA simulation of sharp indentation
 
 Place the folder "SharpIndentation" into your abaqus_plugins directory
 
