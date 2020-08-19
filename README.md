@@ -1,5 +1,5 @@
 # abaqus-indentation-plugin
-Abaqus plugin for FEA simulation of sharp indentation
+Abaqus Plug-In for FEA simulation of sharp indentation
 
 1. Download the code from the green "Code" button in the upper right of the GitHub page.
 
