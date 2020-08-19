@@ -228,6 +228,7 @@ class SharpIndentationModelDB(AFXDataDialog):
         FXLabel(gbAbout1, i18n.tr('Institution: Colorado School of Mines'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         FXLabel(gbAbout1, i18n.tr('bridavis@mines.edu'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         FXLabel(gbAbout1, i18n.tr('brian.campbell.davis@gmail.com'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbAbout1, i18n.tr('GitHub: https://github.com/BrianCDavisResearch/abaqus-indentation-plugin'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
 
         #-----------------------------------------------------------------------
 
@@ -557,6 +558,7 @@ class SharpIndentationResultsDB(AFXDataDialog):
         FXLabel(gbAbout1, i18n.tr('Institution: Colorado School of Mines'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         FXLabel(gbAbout1, i18n.tr('bridavis@mines.edu'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         FXLabel(gbAbout1, i18n.tr('brian.campbell.davis@gmail.com'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbAbout1, i18n.tr('GitHub: https://github.com/BrianCDavisResearch/abaqus-indentation-plugin'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
 
         #-----------------------------------------------------------------------
 
