@@ -229,6 +229,7 @@ class SharpIndentationModelDB(AFXDataDialog):
         FXLabel(gbAbout1, i18n.tr('bridavis@mines.edu'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         FXLabel(gbAbout1, i18n.tr('brian.campbell.davis@gmail.com'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         FXLabel(gbAbout1, i18n.tr('GitHub: https://github.com/BrianCDavisResearch/abaqus-indentation-plugin'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbAbout1, i18n.tr('Journal Article: https://doi.org/10.1111/jace.17399'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
 
         #-----------------------------------------------------------------------
 
@@ -559,6 +560,7 @@ class SharpIndentationResultsDB(AFXDataDialog):
         FXLabel(gbAbout1, i18n.tr('bridavis@mines.edu'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         FXLabel(gbAbout1, i18n.tr('brian.campbell.davis@gmail.com'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         FXLabel(gbAbout1, i18n.tr('GitHub: https://github.com/BrianCDavisResearch/abaqus-indentation-plugin'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        FXLabel(gbAbout1, i18n.tr('Journal Article: https://doi.org/10.1111/jace.17399'), pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
 
         #-----------------------------------------------------------------------
 
