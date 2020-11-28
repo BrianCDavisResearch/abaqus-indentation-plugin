@@ -1,10 +1,12 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #--------------------------------------------------------------------------------------------------
 # Copyright 2020 Brian C. Davis
 #--------------------------------------------------------------------------------------------------
 
-def default_system_units(*args,**kwargs):
+import csv, imp, os, numpy as np, subprocess, sys
+
+#-----------------------------------------------------------------------
+
+def default_system_units():
 
     print('\n\n')
     print('#------------------------------------------')
@@ -36,14 +38,12 @@ def model_script(inp):
     #-----------------------------------------------------------------------
     # Loading module and making class instance
     #-----------------------------------------------------------------------
-    import imp, numpy as np
-    # from imp import load_source
     importedLibrary = imp.load_source('Lib_Indenter_Combo', inp['anModuleFileName'])
-    #-----------------------------------------------------------------------
-    if inp['partTaType'] == 'AsymIndent': indenter = importedLibrary.ASym_Indenter_Analysis(inp['partTaType'],inp['anType'])
-    elif inp['partTaType'] == 'QsymIndent': indenter = importedLibrary.QSym_Indenter_Analysis(inp['partTaType'],inp['anType'])
-    elif inp['partTaType'] == 'HsymIndent': indenter = importedLibrary.HSym_Indenter_Analysis(inp['partTaType'],inp['anType'])
-    elif inp['partTaType'] == 'AsymPillar': indenter = importedLibrary.ASym_Pillar_Analysis(inp['partTaType'],inp['anType'])
+    if inp['anGeomType'] == 'AsymIndent': indenter = importedLibrary.ASym_Indenter_Analysis(inp['anGeomType'],inp['anSolverType'])
+    elif inp['anGeomType'] == 'CsymIndent': indenter = importedLibrary.CSym_Indenter_Analysis(inp['anGeomType'],inp['anSolverType'])
+    elif inp['anGeomType'] == 'QsymIndent': indenter = importedLibrary.QSym_Indenter_Analysis(inp['anGeomType'],inp['anSolverType'])
+    elif inp['anGeomType'] == 'HsymIndent': indenter = importedLibrary.HSym_Indenter_Analysis(inp['anGeomType'],inp['anSolverType'])
+    elif inp['anGeomType'] == 'AsymPillar': indenter = importedLibrary.ASym_Pillar_Analysis(inp['anGeomType'],inp['anSolverType'])
     #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
@@ -51,7 +51,7 @@ def model_script(inp):
     #-----------------------------------------------------------------------
     if inp['anPreSolve']:
 
-        inp['outpFieldInt'] = 100
+        inp['outpHistInt'] = 100
 
         inp['meshDivider'] = 25.0
 
@@ -71,7 +71,7 @@ def model_script(inp):
 
     #-----------------------------------------------------------------------
 
-    if inp['anType'].startswith('Standard'):
+    if inp['anSolverType'].startswith('Standard'):
 
         inp['anBulkViscosity'] = None
 
@@ -81,7 +81,7 @@ def model_script(inp):
 
         inp['meshRemeshing'] = None
 
-    elif inp['anType'].startswith('Explicit'):
+    elif inp['anSolverType'].startswith('Explicit'):
 
         inp['contType'] = 'Surface'
 
@@ -141,7 +141,7 @@ def model_script(inp):
 
     if not ('meshAspectRatio' in dict(inp)): inp['meshAspectRatio'] = 1.0
 
-    if not ('meshMultiples' in dict(inp)): inp['meshMultiples'] = (1.0, inp['meshDivider'], 3.0, 2.0)
+    # if not ('meshMultiples' in dict(inp)): inp['meshMultiples'] = (1.0, inp['meshDivider'], 3.0, 2.0)
 
     if not ('meshPartitions' in dict(inp)): inp['meshPartitions'] = (0.0,0.050,0.100,0.200,1.000)   # (unitless) fraction of OAL for refined mesh partitions
 
@@ -149,12 +149,19 @@ def model_script(inp):
 
     if not ('partTaScale' in dict(inp)): inp['partTaScale'] = 1.0
 
-    if not ('partTaSize' in dict(inp)): inp['partTaSize'] = 100.0 * inp['bcIndDepth']
+    # if not ('partTaSize' in dict(inp)): inp['partTaSize'] = 100.0 * inp['bcIndDepth']
     #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
-    # Calculations which are dependent on indenter depth
+    inp['meshMultiples'] = (1.0, inp['meshDivider'], 3.0, 2.0)
+
+    inp['partTaSize'] = 100.0 * inp['bcIndDepth']
     #-----------------------------------------------------------------------
+
+    #-----------------------------------------------------------------------
+    # Calculations which are dependent on indenter depth and mesh divider
+    #-----------------------------------------------------------------------
+
     tempEstIndentRadius = inp['bcIndDepth'] * np.tan(np.radians(inp['partIndDAngle']))
 
     tempEstContactLength = inp['bcIndDepth'] / np.cos(np.radians(inp['partIndDAngle']))
@@ -225,7 +232,7 @@ def model_script(inp):
 
     #-----------------------------------------------------------------
 
-    if inp['partTaType'] == 'AsymIndent':
+    if inp['anGeomType'] == 'AsymIndent':
 
         indenter.createCylindricalTestArticle(inp['partTaScale']*inp['partTaSize'],inp['partTaScale']*inp['partTaSize'],inp['meshPartitions'],tempFineMeshSize,inp['meshMultiples'],inp['meshAspectRatio'])
 
@@ -233,27 +240,29 @@ def model_script(inp):
 
         indenter.createIndenter(partIndDAngle=inp['partIndDAngle'],partIndRadius=inp['partIndRadius'],partIndFlat=inp['partIndFlat'])
 
-    elif inp['partTaType'] == 'QsymIndent':
+    elif inp['anGeomType'] == 'CsymIndent':
+
+        indenter.createCylindricalTestArticle(inp['partTaScale']*inp['partTaSize'],inp['partTaScale']*inp['partTaSize'],inp['meshPartitions'],tempFineMeshSize,inp['meshMultiples'],inp['meshAspectRatio'])
+
+        indenter.createCylindricalIndenter(inp['partIndDAngle'],partIndRadius=inp['partIndRadius'],partIndFlat=inp['partIndFlat'])
+
+    elif inp['anGeomType'] == 'QsymIndent':
 
         indenter.createQuarterTestArticle(inp['partTaScale']*inp['partTaSize'],inp['partTaScale']*inp['partTaSize'],inp['meshPartitions'],tempFineMeshSize,inp['meshMultiples'],inp['meshAspectRatio'])
 
         indenter.createQuarterIndenter(inp['partIndDAngle'],partIndRadius=inp['partIndRadius'],partIndFlat=inp['partIndFlat'])
 
-    elif inp['partTaType'] == 'HsymIndent':
+    elif inp['anGeomType'] == 'HsymIndent':
 
         indenter.createHalfTestArticle(inp['partTaScale']*inp['partTaSize'],inp['partTaScale']*inp['partTaSize'],inp['meshPartitions'],tempFineMeshSize,inp['meshMultiples'],inp['meshAspectRatio'])
 
         indenter.createHalfIndenter(inp['partIndDAngle'],partIndRadius=inp['partIndRadius'],partIndFlat=inp['partIndFlat'])
 
-    elif inp['partTaType'] == 'CsymIndent':
+    elif inp['anGeomType'] == 'Full3DIndent':
 
         print("This isn't ready yet!")
 
-    elif inp['partTaType'] == 'Full3DIndent':
-
-        print("This isn't ready yet!")
-
-    elif inp['partTaType'] == 'AsymPillar':
+    elif inp['anGeomType'] == 'AsymPillar':
 
         indenter.createPillarTestArticle()
 
@@ -284,8 +293,6 @@ def model_script(inp):
     #-----------------------------------------------------------------------
     # Writes input variables to CSV file: "All-Inputs"
     #-----------------------------------------------------------------------
-    import csv
-
     if inp['anCSV']: tempCSVinputsName = inp['anJobName'] + '_upg_All-Inputs.csv'
     else: tempCSVinputsName = inp['anJobName'] + '_All-Inputs.csv'
 
@@ -304,8 +311,6 @@ def plugin_prescript(*args,**kwargs):
 
     print('\n\nRunning Abaqus Plugin: Sharp Indentation Model...\n')
 
-    import os
-
     #-----------------------------------------------------------------------
 
     inp = {}
@@ -318,8 +323,6 @@ def plugin_prescript(*args,**kwargs):
     #-----------------------------------------------------------------------
 
     if inp['anRerunCSV']:
-
-        import csv
 
         multiVarNames = ['anBulkViscosity','anTimeStep','meshMultiples','meshPartitions','meshRemeshing','matTaPsKerm','matTaPsMoln','matTaPsDPCap','matTaPsDPCapHard','matTaPsGTNq']
 
@@ -397,7 +400,7 @@ def plugin_prescript(*args,**kwargs):
         # inp['anPreSolve']
         # inp['anTimeInc']
         # inp['anTimeStep']
-        inp['anType'] = str(kwargs.get('anType',None))
+        inp['anSolverType'] = str(kwargs.get('anSolverType',None))
 
         inp['bcIndDepth'] = float(kwargs.get('bcIndDepth',None))
         # inp['bcIndForce']
@@ -426,7 +429,7 @@ def plugin_prescript(*args,**kwargs):
         inp['matTaPsGTNq2'] = float(kwargs.get('matTaPsGTNq2',None))
         inp['matTaPsGTNrd'] = float(kwargs.get('matTaPsGTNrd',None))
         inp['matTaPsGTNq'] = (inp['matTaPsGTNq1'],inp['matTaPsGTNq2'],inp['matTaPsGTNq1']**2.0)
-        del inp['matTaPsGTNq1']; del inp['matTaPsGTNq2'];
+        del inp['matTaPsGTNq1']; del inp['matTaPsGTNq2']
 
         inp['matTaPsDPCap0'] = float(kwargs.get('matTaPsDPCap0',None))
         inp['matTaPsDPCap1'] = float(kwargs.get('matTaPsDPCap1',None))
@@ -436,13 +439,13 @@ def plugin_prescript(*args,**kwargs):
         inp['matTaPsDPCap5'] = float(kwargs.get('matTaPsDPCap5',None))
         inp['matTaPsDPCap'] =  (inp['matTaPsDPCap0'], inp['matTaPsDPCap1'], inp['matTaPsDPCap2'], inp['matTaPsDPCap3'], inp['matTaPsDPCap4'], inp['matTaPsDPCap5'])
         # inp['matTaPsDPCapHard'] = ((4750.0, 0.0),(8000.0, 0.005),(9800.0, 0.0123),(12000.0, 0.0427),(13600.0, 0.0735),(14600.0, 0.117),(15500.0, 0.135),(18100.0, 0.1655),(20000.0, 0.188),(25000.0, 0.195),(50000.0, 0.196)) #Hardening from Molnar 2017, Rouxel 2008, and Deschamps 2013
-        del inp['matTaPsDPCap0']; del inp['matTaPsDPCap1']; del inp['matTaPsDPCap2']; del inp['matTaPsDPCap3']; del inp['matTaPsDPCap4']; del inp['matTaPsDPCap5'];
+        del inp['matTaPsDPCap0']; del inp['matTaPsDPCap1']; del inp['matTaPsDPCap2']; del inp['matTaPsDPCap3']; del inp['matTaPsDPCap4']; del inp['matTaPsDPCap5']
 
         inp['matTaPsKerm1'] = float(kwargs.get('matTaPsKerm1',None))
         inp['matTaPsKerm2'] = float(kwargs.get('matTaPsKerm2',None))
         inp['matTaPsKerm3'] = float(kwargs.get('matTaPsKerm3',None))
         inp['matTaPsKerm'] = (inp['matTaPsKerm1'],inp['matTaPsKerm2'],inp['matTaPsKerm3'])
-        del inp['matTaPsKerm1']; del inp['matTaPsKerm2']; del inp['matTaPsKerm3'];
+        del inp['matTaPsKerm1']; del inp['matTaPsKerm2']; del inp['matTaPsKerm3']
 
         inp['matTaPsMoln1'] = float(kwargs.get('matTaPsMoln1',None))
         inp['matTaPsMoln2'] = float(kwargs.get('matTaPsMoln2',None))
@@ -454,7 +457,7 @@ def plugin_prescript(*args,**kwargs):
         inp['matTaPsMoln8'] = float(kwargs.get('matTaPsMoln8',None))
         inp['matTaPsMoln9'] = float(kwargs.get('matTaPsMoln9',None))
         inp['matTaPsMoln'] = (inp['matTaPsMoln1'],inp['matTaPsMoln2'],inp['matTaPsMoln3'],inp['matTaPsMoln4'],inp['matTaPsMoln5'],inp['matTaPsMoln6'],inp['matTaPsMoln7'],inp['matTaPsMoln8'],inp['matTaPsMoln9'])
-        del inp['matTaPsMoln1']; del inp['matTaPsMoln2']; del inp['matTaPsMoln3']; del inp['matTaPsMoln4']; del inp['matTaPsMoln5']; del inp['matTaPsMoln6']; del inp['matTaPsMoln7']; del inp['matTaPsMoln8']; del inp['matTaPsMoln9'];
+        del inp['matTaPsMoln1']; del inp['matTaPsMoln2']; del inp['matTaPsMoln3']; del inp['matTaPsMoln4']; del inp['matTaPsMoln5']; del inp['matTaPsMoln6']; del inp['matTaPsMoln7']; del inp['matTaPsMoln8']; del inp['matTaPsMoln9']
 
         # inp['matTaRayDamp']
 
@@ -466,7 +469,7 @@ def plugin_prescript(*args,**kwargs):
         inp['meshRemeshing1'] = int(kwargs.get('meshRemeshing1',None))
         inp['meshRemeshing2'] = int(kwargs.get('meshRemeshing2',None))
         inp['meshRemeshing'] = (inp['meshRemeshing1'],inp['meshRemeshing2'])
-        del inp['meshRemeshing1']; del inp['meshRemeshing2'];
+        del inp['meshRemeshing1']; del inp['meshRemeshing2']
 
         inp['outpFieldInt'] = int(kwargs.get('outpFieldInt',None))
         inp['outpHistInt'] = int(kwargs.get('outpHistInt',None))
@@ -479,7 +482,7 @@ def plugin_prescript(*args,**kwargs):
 
         inp['partTaScale'] = float(kwargs.get('partTaScale',None))
         # inp['partTaSize']
-        # inp['partTaType']
+        # inp['anGeomType']
         #-----------------------------------------------------------------------
 
         #-----------------------------------------------------------------------
@@ -488,7 +491,7 @@ def plugin_prescript(*args,**kwargs):
         inp['anCSV'] = False
         inp['anPreSolve'] = False
         inp['bcType'] = 'Displacement'
-        inp['partTaType'] = 'AsymIndent'
+        inp['anGeomType'] = 'AsymIndent'
         #-----------------------------------------------------------------------
         if inp['partIndType'] == 'Rigid':
 
@@ -509,14 +512,25 @@ def plugin_prescript(*args,**kwargs):
 
         elif inp['matTaPsModel'] == 'DPC (Bruns et al. 2020)':
 
-            import numpy as np
             # inp['matTaPsDPCap'] =  (7500.0, 1e-04, 1.066, 0.000, 0.0, 1.0)
-            inp['matTaPsDPCapHard'] = [[8000.0,0.00]]
+            inp['matTaPsDPCapHard'] = [(8000.0,0.0)]
+
             tempAlpha = 21.0; tempBeta = 4059.0; tempP0 = 1.7
+
             for pValue in np.linspace(9.0,25.0,17):
+
                 normDp = ( ((tempAlpha)/(1.0+tempBeta*np.exp(-pValue/tempP0))) - ((tempAlpha)/(1.0+tempBeta)) ) / 100.0
+
                 epsilonPV = np.abs(np.log((1.0)/(normDp+1.0)))
-                inp['matTaPsDPCapHard'].append([pValue*1e3,epsilonPV])
+
+                # print('%s, %s, %s'%(pValue,normDp,epsilonPV))
+
+                inp['matTaPsDPCapHard'].append((pValue*1e3,float('%0.5f'%(epsilonPV))))
+
+            inp['matTaPsDPCapHard'] = tuple(inp['matTaPsDPCapHard'])
+
+            # for value in inp['matTaPsDPCapHard']: print(value)
+
         #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------

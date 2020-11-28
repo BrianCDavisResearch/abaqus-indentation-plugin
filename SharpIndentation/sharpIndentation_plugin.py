@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #--------------------------------------------------------------------------------------------------
 # Copyright 2020 Brian C. Davis
 #--------------------------------------------------------------------------------------------------
@@ -21,7 +19,7 @@ class SharpIndentationModel(AFXForm):
 
         #-----------------------------------------------------------------------
 
-        self.anType = AFXStringKeyword(self.cmd, 'anType', isRequired=True, defaultValue='Standard - Quasi-Static')
+        self.anSolverType = AFXStringKeyword(self.cmd, 'anSolverType', isRequired=True, defaultValue='Standard - Quasi-Static')
 
         self.bcIndDepth = AFXFloatKeyword(self.cmd, 'bcIndDepth', isRequired=True, defaultValue=3.0)
         self.contFriciton = AFXFloatKeyword(self.cmd, 'contFriciton', isRequired=True, defaultValue=0.0)

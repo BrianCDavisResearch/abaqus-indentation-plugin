@@ -1,10 +1,10 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #--------------------------------------------------------------------------------------------------
 # Copyright 2020 Brian C. Davis
 #--------------------------------------------------------------------------------------------------
 
 from abaqusConstants import *
+
+import csv, os, numpy as np, subprocess, sys
 
 #--------------------------------------------------------------------------------------------------
 
@@ -52,7 +52,7 @@ class General_Analysis(object):
         self.mdb.models['Model-1'].materials['Elastic_'+self.matTaName].Elastic(table=((self.matTaEYM, self.matTaEPR), ))
         self.mdb.models['Model-1'].materials['Elastic_'+self.matTaName].Density(table=((self.matTaDensity, ), ))
 
-        if self.anType.startswith('Explicit'):
+        if self.anSolverType.startswith('Explicit'):
 
             self.mdb.models['Model-1'].materials['Elastic_'+self.matTaName].Damping(alpha=self.matTaRayDamp[0], beta=self.matTaRayDamp[1])
 
@@ -85,7 +85,7 @@ class General_Analysis(object):
             self.mdb.models['Model-1'].materials[self.matTaPsModel+'_'+self.matTaName].Density(table=((self.matTaDensity, ), ))
             self.mdb.models['Model-1'].materials[self.matTaPsModel+'_'+self.matTaName].Plastic(table=((self.matTaPsVM, 0.0),))
 
-        elif self.matTaPsModel == 'PMP' or self.matTaPsModel == 'GTN-pmp':
+        elif self.matTaPsModel.startswith('PMP') or self.matTaPsModel == 'GTN-pmp':
 
             self.matTaPsModel = 'PMP'
 
@@ -128,6 +128,17 @@ class General_Analysis(object):
             self.mdb.models['Model-1'].materials[self.matTaPsModel+'_'+self.matTaName].Depvar(n=11)
             self.mdb.models['Model-1'].materials[self.matTaPsModel+'_'+self.matTaName].UserMaterial(mechanicalConstants=([self.matTaEYM,self.matTaEPR] + list(self.matTaPsMoln)))
 
+        elif self.matTaPsModel.startswith('Linear'):
+
+            self.matTaPsModel = 'LinYMsub'
+
+            self.mdb.models['Model-1'].Material(name=self.matTaPsModel+'_'+self.matTaName)
+            self.mdb.models['Model-1'].materials[self.matTaPsModel+'_'+self.matTaName].Density(table=((self.matTaDensity, ), ))
+
+            ############ User Material still in work ############
+            self.mdb.models['Model-1'].materials[self.matTaPsModel+'_'+self.matTaName].Depvar(n=1)
+            self.mdb.models['Model-1'].materials[self.matTaPsModel+'_'+self.matTaName].UserMaterial(mechanicalConstants=(70.0e3, -4.006, 0.15, 7.00e3, 0.0, 7.10e3, 0.1, 7.50e3, 0.5))
+
         self.mdb.models['Model-1'].HomogeneousSolidSection(name=self.matTaPsModel+'_'+self.matTaName, material=self.matTaPsModel+'_'+self.matTaName, thickness=None)
 
         return(None)
@@ -143,54 +154,51 @@ class General_Analysis(object):
         self.outpFieldInt = kwargs.get('outpFieldInt',None)
         self.outpHistInt = kwargs.get('outpHistInt',None)
 
+        self.initStdIncFactor = kwargs.get('initStdIncFactor',1e-03)
+
         from caeModules import step
 
-        if self.anType.startswith('Standard'):
+        if self.anSolverType.startswith('Standard'):
 
-            if self.anType.endswith('- Static'):
+            if self.anSolverType.endswith('Static'):
 
                 self.mdb.models['Model-1'].StaticStep(name='Loading', previous='Initial',
                     maxNumInc=10000, stabilizationMagnitude=0.0002, timePeriod=self.anTimeStep[0],
                     stabilizationMethod=DISSIPATED_ENERGY_FRACTION,
-                    continueDampingFactors=False, adaptiveDampingRatio=0.05, initialInc=self.anTimeStep[0]*1e-05,
+                    continueDampingFactors=False, adaptiveDampingRatio=0.05, initialInc=self.anTimeStep[0]*self.initStdIncFactor,
                     minInc=1e-15, matrixSolver=DIRECT, matrixStorage=UNSYMMETRIC, nlgeom=ON)
 
                 self.mdb.models['Model-1'].StaticStep(name='Unloading', previous='Loading',
                     maxNumInc=10000, stabilizationMagnitude=0.0002, timePeriod=self.anTimeStep[2],
                     stabilizationMethod=DISSIPATED_ENERGY_FRACTION,
-                    continueDampingFactors=False, adaptiveDampingRatio=0.05, initialInc=self.anTimeStep[2]*1e-05,
+                    continueDampingFactors=False, adaptiveDampingRatio=0.05, initialInc=self.anTimeStep[2]*self.initStdIncFactor,
                     minInc=1e-15, matrixSolver=DIRECT, matrixStorage=UNSYMMETRIC)
 
-            elif self.anType.endswith('- Quasi-Static'):
+            elif self.anSolverType.endswith('Quasi-Static'):
 
                 if self.anTimeStep[1] > 0.0:
 
                     self.mdb.models['Model-1'].ImplicitDynamicsStep(name='Loading', previous='Initial',
-                        maxNumInc=10000, application=QUASI_STATIC, initialInc=self.anTimeStep[0]*1e-05, minInc=1e-15, timePeriod=self.anTimeStep[0],
-                        nohaf=OFF, amplitude=RAMP, alpha=DEFAULT, initialConditions=OFF,
-                        matrixStorage=UNSYMMETRIC, nlgeom=ON)
+                        maxNumInc=10000, application=QUASI_STATIC, initialInc=self.anTimeStep[0]*self.initStdIncFactor, minInc=1e-15, timePeriod=self.anTimeStep[0],
+                        nohaf=OFF, amplitude=RAMP, alpha=DEFAULT, initialConditions=OFF, matrixStorage=UNSYMMETRIC, nlgeom=ON)
 
                     self.mdb.models['Model-1'].ImplicitDynamicsStep(name='Dwell-Loaded', previous='Loading',
-                        maxNumInc=10000, application=QUASI_STATIC, initialInc=self.anTimeStep[1]*1e-05, minInc=1e-15, timePeriod=self.anTimeStep[1],
-                        nohaf=OFF, amplitude=RAMP, alpha=DEFAULT, initialConditions=OFF,
-                        matrixStorage=UNSYMMETRIC, nlgeom=ON)
+                        maxNumInc=10000, application=QUASI_STATIC, initialInc=self.anTimeStep[1]*self.initStdIncFactor, minInc=1e-15, timePeriod=self.anTimeStep[1],
+                        nohaf=OFF, amplitude=RAMP, alpha=DEFAULT, initialConditions=OFF, matrixStorage=UNSYMMETRIC, nlgeom=ON)
 
                     self.mdb.models['Model-1'].ImplicitDynamicsStep(name='Unloading', previous='Dwell-Loaded',
-                        maxNumInc=10000, application=QUASI_STATIC, initialInc=self.anTimeStep[2]*1e-05, minInc=1e-15, timePeriod=self.anTimeStep[2],
-                        nohaf=OFF, amplitude=RAMP, alpha=DEFAULT, initialConditions=OFF,
-                        matrixStorage=UNSYMMETRIC)
+                        maxNumInc=10000, application=QUASI_STATIC, initialInc=self.anTimeStep[2]*self.initStdIncFactor, minInc=1e-15, timePeriod=self.anTimeStep[2],
+                        nohaf=OFF, amplitude=RAMP, alpha=DEFAULT, initialConditions=OFF, matrixStorage=UNSYMMETRIC)
 
                 else:
 
                     self.mdb.models['Model-1'].ImplicitDynamicsStep(name='Loading', previous='Initial',
-                        maxNumInc=10000, application=QUASI_STATIC, initialInc=self.anTimeStep[0]*1e-05, minInc=1e-15, timePeriod=self.anTimeStep[0],
-                        nohaf=OFF, amplitude=RAMP, alpha=DEFAULT, initialConditions=OFF,
-                        matrixStorage=UNSYMMETRIC, nlgeom=ON)
+                        maxNumInc=10000, application=QUASI_STATIC, initialInc=self.anTimeStep[0]*self.initStdIncFactor, minInc=1e-15, timePeriod=self.anTimeStep[0],
+                        nohaf=OFF, amplitude=RAMP, alpha=DEFAULT, initialConditions=OFF, matrixStorage=UNSYMMETRIC, nlgeom=ON)
 
                     self.mdb.models['Model-1'].ImplicitDynamicsStep(name='Unloading', previous='Loading',
-                        maxNumInc=10000, application=QUASI_STATIC, initialInc=self.anTimeStep[2]*1e-05, minInc=1e-15, timePeriod=self.anTimeStep[2],
-                        nohaf=OFF, amplitude=RAMP, alpha=DEFAULT, initialConditions=OFF,
-                        matrixStorage=UNSYMMETRIC)
+                        maxNumInc=10000, application=QUASI_STATIC, initialInc=self.anTimeStep[2]*self.initStdIncFactor, minInc=1e-15, timePeriod=self.anTimeStep[2],
+                        nohaf=OFF, amplitude=RAMP, alpha=DEFAULT, initialConditions=OFF, matrixStorage=UNSYMMETRIC)
 
             if self.anJobName.endswith('_pre'):
 
@@ -201,8 +209,8 @@ class General_Analysis(object):
 
                 regionDef1=self.mdb.models['Model-1'].rootAssembly.sets['mSet-1']
                 regionDef2=self.mdb.models['Model-1'].rootAssembly.allInstances['Test_Article-1'].sets['Base_Set']
-                self.mdb.models['Model-1'].FieldOutputRequest(name='Reaction_Part_A', createStepName='Loading', variables=('U', ), numIntervals=self.outpHistInt, timeMarks=ON, region=regionDef1, sectionPoints=DEFAULT, rebar=EXCLUDE)
-                self.mdb.models['Model-1'].FieldOutputRequest(name='Reaction_Part_B', createStepName='Loading', variables=('RF', ), numIntervals=self.outpHistInt, timeMarks=ON, region=regionDef2, sectionPoints=DEFAULT, rebar=EXCLUDE)
+                self.mdb.models['Model-1'].FieldOutputRequest(name='Reaction_Ind', createStepName='Loading', variables=('U', 'RF'), numIntervals=self.outpHistInt, timeMarks=ON, region=regionDef1, sectionPoints=DEFAULT, rebar=EXCLUDE)
+                self.mdb.models['Model-1'].FieldOutputRequest(name='Reaction_Base', createStepName='Loading', variables=('RF', ), numIntervals=self.outpHistInt, timeMarks=ON, region=regionDef2, sectionPoints=DEFAULT, rebar=EXCLUDE)
 
             else:
 
@@ -224,16 +232,22 @@ class General_Analysis(object):
                     self.mdb.models['Model-1'].FieldOutputRequest(name='F-Output-2', createStepName='Loading', variables=('LE', 'U', 'COORD'),
                         numIntervals=self.outpFieldInt, timeMarks=ON, region=regionDef, sectionPoints=DEFAULT, rebar=EXCLUDE)
 
-                if self.matTaPsModel == 'PMP':
+                if self.matTaPsModel.startswith('PMP'):
 
                     regionDef=self.mdb.models['Model-1'].rootAssembly.allInstances['Test_Article-1'].sets['Mat_Plastic_Set']
                     self.mdb.models['Model-1'].FieldOutputRequest(name='Plastic_Zone', createStepName='Loading', variables=('PE', 'PEEQ', 'VVF','VVFG','VVFN', 'RD'),
                         numIntervals=self.outpFieldInt, timeMarks=ON, region=regionDef, sectionPoints=DEFAULT, rebar=EXCLUDE)
 
-                elif self.matTaPsModel == 'DPC':
+                elif self.matTaPsModel.startswith('DPC'):
 
                     regionDef=self.mdb.models['Model-1'].rootAssembly.allInstances['Test_Article-1'].sets['Mat_Plastic_Set']
                     self.mdb.models['Model-1'].FieldOutputRequest(name='Plastic_Zone', createStepName='Loading', variables=('PE', 'PEEQ', 'PEQC'),
+                        numIntervals=self.outpFieldInt, timeMarks=ON, region=regionDef, sectionPoints=DEFAULT, rebar=EXCLUDE)
+
+                elif self.matTaPsModel.startswith('Kerm') or self.matTaPsModel.startswith('Moln') or self.matTaPsModel.endswith('sub'):
+
+                    regionDef=self.mdb.models['Model-1'].rootAssembly.allInstances['Test_Article-1'].sets['Mat_Plastic_Set']
+                    self.mdb.models['Model-1'].FieldOutputRequest(name='User-Output', createStepName='Loading', variables=('SDV', 'ESDV', 'FV', 'UVARM', 'STATUS', 'EACTIVE'),
                         numIntervals=self.outpFieldInt, timeMarks=ON, region=regionDef, sectionPoints=DEFAULT, rebar=EXCLUDE)
 
                 else:
@@ -250,8 +264,8 @@ class General_Analysis(object):
 
                 regionDef1=self.mdb.models['Model-1'].rootAssembly.sets['mSet-1']
                 regionDef2=self.mdb.models['Model-1'].rootAssembly.allInstances['Test_Article-1'].sets['Base_Set']
-                self.mdb.models['Model-1'].FieldOutputRequest(name='Reaction_Part_A', createStepName='Loading', variables=('U', ), numIntervals=self.outpHistInt, timeMarks=ON, region=regionDef1, sectionPoints=DEFAULT, rebar=EXCLUDE)
-                self.mdb.models['Model-1'].FieldOutputRequest(name='Reaction_Part_B', createStepName='Loading', variables=('RF', ), numIntervals=self.outpHistInt, timeMarks=ON, region=regionDef2, sectionPoints=DEFAULT, rebar=EXCLUDE)
+                self.mdb.models['Model-1'].FieldOutputRequest(name='Reaction_Ind', createStepName='Loading', variables=('U', 'RF'), numIntervals=self.outpHistInt, timeMarks=ON, region=regionDef1, sectionPoints=DEFAULT, rebar=EXCLUDE)
+                self.mdb.models['Model-1'].FieldOutputRequest(name='Reaction_Base', createStepName='Loading', variables=('RF', ), numIntervals=self.outpHistInt, timeMarks=ON, region=regionDef2, sectionPoints=DEFAULT, rebar=EXCLUDE)
 
             self.mdb.models['Model-1'].SmoothStepAmplitude(name='Std-Indent-Smooth', timeSpan=STEP, data=((0.0, 0.0), (self.anTimeStep[0], 1.0)))
             self.mdb.models['Model-1'].SmoothStepAmplitude(name='Std-Remove-Smooth', timeSpan=STEP, data=((0.0, 1.0), (self.anTimeStep[2], 0.0)))
@@ -262,7 +276,7 @@ class General_Analysis(object):
             #Gives up after 20 unconverged iterations (instead of 5)
             self.mdb.models['Model-1'].steps['Loading'].control.setValues(allowPropagation=OFF, resetDefaultValues=OFF, timeIncrementation=(4.0, 8.0, 9.0, 16.0, 10.0, 4.0, 12.0, 20.0, 6.0, 3.0, 50.0))
 
-        elif self.anType.startswith('Explicit'):
+        elif self.anSolverType.startswith('Explicit'):
 
             if self.anTimeStep[1] > 0.0:
 
@@ -295,7 +309,7 @@ class General_Analysis(object):
                 self.mdb.models['Model-1'].steps['Dwell-Unloaded'].setValues(linearBulkViscosity=self.anBulkViscosity[3])
                 self.mdb.models['Model-1'].steps['Dwell-Unloaded'].setValues(timeIncrementationMethod=AUTOMATIC_EBE, scaleFactor=1.0, maxIncrement=None)
 
-            if self.anType.endswith('Mass Scaling'):
+            if self.anSolverType.endswith('Mass Scaling'):
 
                 self.mdb.models['Model-1'].steps['Loading'].setValues(massScaling=((SEMI_AUTOMATIC, MODEL, THROUGHOUT_STEP, 0.0, 1.0, BELOW_MIN, 100, 0, 0.0, 0.0, 0, None), ))
 
@@ -306,8 +320,8 @@ class General_Analysis(object):
 
                 regionDef1=self.mdb.models['Model-1'].rootAssembly.sets['mSet-1']
                 regionDef2=self.mdb.models['Model-1'].rootAssembly.allInstances['Test_Article-1'].sets['Base_Set']
-                self.mdb.models['Model-1'].FieldOutputRequest(name='Reaction_Part_A', createStepName='Loading', variables=('U', 'RF'), numIntervals=self.outpHistInt, timeMarks=ON, region=regionDef1, sectionPoints=DEFAULT, rebar=EXCLUDE)
-                self.mdb.models['Model-1'].FieldOutputRequest(name='Reaction_Part_B', createStepName='Loading', variables=('U', 'RF'), numIntervals=self.outpHistInt, timeMarks=ON, region=regionDef2, sectionPoints=DEFAULT, rebar=EXCLUDE)
+                self.mdb.models['Model-1'].FieldOutputRequest(name='Reaction_Ind', createStepName='Loading', variables=('U', 'RF'), numIntervals=self.outpHistInt, timeMarks=ON, region=regionDef1, sectionPoints=DEFAULT, rebar=EXCLUDE)
+                self.mdb.models['Model-1'].FieldOutputRequest(name='Reaction_Base', createStepName='Loading', variables=('RF', ), numIntervals=self.outpHistInt, timeMarks=ON, region=regionDef2, sectionPoints=DEFAULT, rebar=EXCLUDE)
 
             else:
 
@@ -329,13 +343,13 @@ class General_Analysis(object):
                     self.mdb.models['Model-1'].FieldOutputRequest(name='F-Output-2', createStepName='Loading', variables=('LE', 'U', 'V', 'A', 'COORD'),
                         numIntervals=self.outpFieldInt, timeMarks=ON, region=regionDef, sectionPoints=DEFAULT, rebar=EXCLUDE)
 
-                if self.matTaPsModel == 'PMP':
+                if self.matTaPsModel.startswith('PMP'):
 
                     regionDef=self.mdb.models['Model-1'].rootAssembly.allInstances['Test_Article-1'].sets['Mat_Plastic_Set']
                     self.mdb.models['Model-1'].FieldOutputRequest(name='Plastic_Zone', createStepName='Loading', variables=('PE', 'PEEQ', 'DENSITY', 'VVF','VVFG','VVFN'),
                         numIntervals=self.outpFieldInt, timeMarks=ON, region=regionDef, sectionPoints=DEFAULT, rebar=EXCLUDE)
 
-                elif self.matTaPsModel == 'DPC':
+                elif self.matTaPsModel.startswith('DPC'):
 
                     regionDef=self.mdb.models['Model-1'].rootAssembly.allInstances['Test_Article-1'].sets['Mat_Plastic_Set']
                     self.mdb.models['Model-1'].FieldOutputRequest(name='Plastic_Zone', createStepName='Loading', variables=('PE', 'PEEQ', 'PEQC', 'DENSITY'),
@@ -355,8 +369,8 @@ class General_Analysis(object):
 
                 regionDef1=self.mdb.models['Model-1'].rootAssembly.sets['mSet-1']
                 regionDef2=self.mdb.models['Model-1'].rootAssembly.allInstances['Test_Article-1'].sets['Base_Set']
-                self.mdb.models['Model-1'].FieldOutputRequest(name='Reaction_Part_A', createStepName='Loading', variables=('U', 'RF'), numIntervals=self.outpHistInt, timeMarks=ON, region=regionDef1, sectionPoints=DEFAULT, rebar=EXCLUDE)
-                self.mdb.models['Model-1'].FieldOutputRequest(name='Reaction_Part_B', createStepName='Loading', variables=('U', 'RF'), numIntervals=self.outpHistInt, timeMarks=ON, region=regionDef2, sectionPoints=DEFAULT, rebar=EXCLUDE)
+                self.mdb.models['Model-1'].FieldOutputRequest(name='Reaction_Ind', createStepName='Loading', variables=('U', 'RF'), numIntervals=self.outpHistInt, timeMarks=ON, region=regionDef1, sectionPoints=DEFAULT, rebar=EXCLUDE)
+                self.mdb.models['Model-1'].FieldOutputRequest(name='Reaction_Base', createStepName='Loading', variables=('RF', ), numIntervals=self.outpHistInt, timeMarks=ON, region=regionDef2, sectionPoints=DEFAULT, rebar=EXCLUDE)
 
             self.mdb.models['Model-1'].SmoothStepAmplitude(name='Exp-Indent-Smooth', timeSpan=STEP, data=((0.0, 0.0), (self.anTimeStep[0], 1.0)))
             self.mdb.models['Model-1'].SmoothStepAmplitude(name='Exp-Remove-Smooth', timeSpan=STEP, data=((0.0, 1.0), (self.anTimeStep[2], 0.0)))
@@ -372,25 +386,21 @@ class General_Analysis(object):
 
         self.meshRemeshing = kwargs.get('meshRemeshing',None)
 
-        if self.anType.startswith('Explicit'):
+        if self.anSolverType.startswith('Explicit'):
 
             self.mdb.models['Model-1'].AdaptiveMeshControl(name='Adaptive_Mesh_Control')
-            # self.mdb.models['Model-1'].adaptiveMeshControls['Adaptive_Mesh_Control'].setValues(smoothingPriority=GRADED,smoothingAlgorithm=GEOMETRY_ENHANCED)
-            self.mdb.models['Model-1'].adaptiveMeshControls['Adaptive_Mesh_Control'].setValues(smoothingPriority=UNIFORM) #"Improved Aspect Ratio"
-            self.mdb.models['Model-1'].adaptiveMeshControls['Adaptive_Mesh_Control'].setValues(smoothingAlgorithm=ANALYSIS_PRODUCT_DEFAULT)
+            # self.mdb.models['Model-1'].adaptiveMeshControls['Adaptive_Mesh_Control'].setValues(smoothingPriority=GRADED, smoothingAlgorithm=GEOMETRY_ENHANCED)
+            self.mdb.models['Model-1'].adaptiveMeshControls['Adaptive_Mesh_Control'].setValues(smoothingPriority=UNIFORM, smoothingAlgorithm=ANALYSIS_PRODUCT_DEFAULT) # "Improved Aspect Ratio"
+            self.mdb.models['Model-1'].adaptiveMeshControls['Adaptive_Mesh_Control'].setValues(volumetricSmoothingWeight=0.50, laplacianSmoothingWeight=0.50, equipotentialSmoothingWeight=0.00)
 
             region=self.mdb.models['Model-1'].rootAssembly.instances['Test_Article-1'].sets['Remeshing_Set']
-            self.mdb.models['Model-1'].steps['Loading'].AdaptiveMeshDomain(region=region, controls='Adaptive_Mesh_Control')
 
-            self.mdb.models['Model-1'].adaptiveMeshControls['Adaptive_Mesh_Control'].setValues(volumetricSmoothingWeight=0.50, laplacianSmoothingWeight=0.50, equipotentialSmoothingWeight=0.00)
+            self.mdb.models['Model-1'].steps['Loading'].AdaptiveMeshDomain(region=region, controls='Adaptive_Mesh_Control')
             self.mdb.models['Model-1'].steps['Loading'].adaptiveMeshDomains['Loading'].setValues(frequency=self.meshRemeshing[0], meshSweeps=self.meshRemeshing[1])
 
-            if self.partTaType.endswith('Pillar'):
+            if (self.meshRemeshing[0] == 1) and (self.meshRemeshing[1] >= 10):
 
-                region=self.mdb.models['Model-1'].rootAssembly.instances['Test_Article-1'].sets['Remeshing_Set']
                 self.mdb.models['Model-1'].steps['Unloading'].AdaptiveMeshDomain(region=region, controls='Adaptive_Mesh_Control')
-
-                self.mdb.models['Model-1'].adaptiveMeshControls['Adaptive_Mesh_Control'].setValues(volumetricSmoothingWeight=0.50, laplacianSmoothingWeight=0.50, equipotentialSmoothingWeight=0.00)
                 self.mdb.models['Model-1'].steps['Unloading'].adaptiveMeshDomains['Unloading'].setValues(frequency=self.meshRemeshing[0], meshSweeps=self.meshRemeshing[1])
 
         return(None)
@@ -403,11 +413,11 @@ class General_Analysis(object):
 
         self.ampFunction = kwargs.get('ampFunction','Tabular') #Currently, only the default is used.
 
-        if self.anType.startswith('Standard'):
+        if self.anSolverType.startswith('Standard'):
 
             if False: #selects between "explicit method" of creating a step for applying pre-stress, or "standard method" of applying pre-stress as an initial condition
 
-                if self.anType.endswith('- Static'):
+                if self.anSolverType.endswith('- Static'):
 
                     self.mdb.models['Model-1'].StaticStep(name='Pre-Stress', previous='Initial',
                         maxNumInc=10000, stabilizationMagnitude=0.0002, timePeriod=self.anTimeStep[0],
@@ -415,7 +425,7 @@ class General_Analysis(object):
                         continueDampingFactors=False, adaptiveDampingRatio=0.05, initialInc=self.anTimeStep[0]*1e-05,
                         minInc=1e-15, matrixSolver=DIRECT, matrixStorage=UNSYMMETRIC, nlgeom=ON)
 
-                elif self.anType.endswith('- Quasi-Static'):
+                elif self.anSolverType.endswith('- Quasi-Static'):
 
                     self.mdb.models['Model-1'].ImplicitDynamicsStep(name='Pre-Stress', previous='Initial',
                         maxNumInc=10000, application=QUASI_STATIC, initialInc=self.anTimeStep[0]*1e-05, minInc=1e-15, timePeriod=self.anTimeStep[0],
@@ -449,7 +459,7 @@ class General_Analysis(object):
                 self.mdb.models['Model-1'].Stress(name='Bi-Axial Pre-Stress', region=region,
                     distributionType=UNIFORM, sigma11=self.bcTaPreStress, sigma22=0.0, sigma33=self.bcTaPreStress, sigma12=0.0, sigma13=0.0, sigma23=0.0)
 
-        elif self.anType.startswith('Explicit'):
+        elif self.anSolverType.startswith('Explicit'):
 
             self.mdb.models['Model-1'].ExplicitDynamicsStep(name='Pre-Stress', previous='Initial', timePeriod=self.anTimeStep[0])
             self.mdb.models['Model-1'].steps['Pre-Stress'].setValues(linearBulkViscosity=self.anBulkViscosity[0])
@@ -491,7 +501,6 @@ class General_Analysis(object):
         inpFile = kwargs.get('inpFile',False)
 
         from caeModules import job
-        import os
 
         self.mdb.Job(name=self.anJobName, model='Model-1', description='',
             type=ANALYSIS, atTime=None, waitMinutes=0, waitHours=0, queue=None,
@@ -513,9 +522,19 @@ class General_Analysis(object):
 
             self.mdb.jobs[self.anJobName].submit(consistencyChecking=OFF)
 
+            # self.mdb.job.waitForCompletion()
+
         elif inpFile:
 
             self.mdb.jobs[self.anJobName].writeInput(consistencyChecking=OFF)
+
+            if True: # Needs to updated with an additional boolean variable...
+
+                with open(os.path.join(os.getcwd(),self.anJobName+'.inp'), 'r') as tempFile: fileData = tempFile.read()
+
+                fileData = fileData.replace('LE, S', 'COORD, LE, S')
+
+                with open(os.path.join(os.getcwd(),self.anJobName+'.inp'), 'w') as tempFile: tempFile.write(fileData)
 
         return(None)
 
@@ -543,15 +562,10 @@ class General_Analysis(object):
         self.anJobName = kwargs.get('anJobName',None)
         self.bcIndForce = kwargs.get('bcIndForce',None)
 
-        from subprocess import call
-        import os, sys
-
         print('Predicting Indenter Depth for Force (%s) in Job (%s)...' %(self.bcIndForce,self.anJobName))
-        print >> sys.__stdout__,('Predicting Indenter Depth for Force (%s) in Job (%s)...' %(self.bcIndForce,self.anJobName))
+        sys.__stdout__.write('Predicting Indenter Depth for Force (%s) in Job (%s)...' %(self.bcIndForce,self.anJobName))
 
-        tempCSVname = [tempFileName for tempFileName in os.listdir(os.getcwd()) if (tempFileName.endswith('.csv')) and ((self.anJobName+'_pre_RF_Work' in tempFileName) or (self.anJobName+'_pre_upg_RF_Work' in tempFileName))][0]
-
-        import csv
+        tempCSVname = [tempFileName for tempFileName in os.listdir(os.getcwd()) if (tempFileName.endswith('.csv')) and ((self.anJobName+'_pre_RF_Work_Ind' in tempFileName) or (self.anJobName+'_pre_upg_RF_Work_Ind' in tempFileName))][0]
 
         with open(tempCSVname, 'rb') as tempFile:
 
@@ -580,10 +594,10 @@ class General_Analysis(object):
         except:
 
             raise ValueError('The pre-analysis must have a greater depth.')
-            print >> sys.__stdout__,('The pre-analysis must have a greater depth.')
+            sys.__stdout__.write('The pre-analysis must have a greater depth.')
 
         print('Predicted Indenter Depth: %s' %(bcIndDepth))
-        print >> sys.__stdout__,('Predicted Indenter Depth: %s' %(bcIndDepth))
+        sys.__stdout__.write('Predicted Indenter Depth: %s' %(bcIndDepth))
 
         return(bcIndDepth)
 
@@ -594,15 +608,10 @@ class General_Analysis(object):
         self.anJobName = kwargs.get('anJobName',None)
         self.bcIndEnergy = kwargs.get('bcIndEnergy',None)
 
-        from subprocess import call
-        import os, sys
-
         print('Predicting Indenter Depth for Energy (%s) in Job (%s)...' %(self.bcIndEnergy,self.anJobName))
-        print >> sys.__stdout__,('Predicting Indenter Depth for Energy (%s) in Job (%s)...' %(self.bcIndEnergy,self.anJobName))
+        sys.__stdout__.write('Predicting Indenter Depth for Energy (%s) in Job (%s)...' %(self.bcIndEnergy,self.anJobName))
 
-        tempCSVname = [tempFileName for tempFileName in os.listdir(os.getcwd()) if (tempFileName.endswith('.csv')) and ((self.anJobName+'_pre_RF_Work' in tempFileName) or (self.anJobName+'_pre_upg_RF_Work' in tempFileName))][0]
-
-        import csv
+        tempCSVname = [tempFileName for tempFileName in os.listdir(os.getcwd()) if (tempFileName.endswith('.csv')) and ((self.anJobName+'_pre_RF_Work_Ind' in tempFileName) or (self.anJobName+'_pre_upg_RF_Work_Ind' in tempFileName))][0]
 
         with open(tempCSVname, 'rb') as tempFile:
 
@@ -631,10 +640,10 @@ class General_Analysis(object):
         except:
 
             raise ValueError('The pre-analysis must have a greater depth.')
-            print >> sys.__stdout__,('The pre-analysis must have a greater depth.')
+            sys.__stdout__.write('The pre-analysis must have a greater depth.')
 
         print('Predicted Indenter Depth: %s' %(bcIndDepth))
-        print >> sys.__stdout__,('Predicted Indenter Depth: %s' %(bcIndDepth))
+        sys.__stdout__.write('Predicted Indenter Depth: %s' %(bcIndDepth))
 
         return(bcIndDepth)
 
@@ -687,7 +696,7 @@ class ASym_Analysis(General_Analysis):
             formulation=PENALTY, directionality=ISOTROPIC, slipRateDependency=OFF, pressureDependency=OFF, temperatureDependency=OFF, dependencies=0,
             table=((self.contFriciton, ), ), shearStressLimit=None, maximumElasticSlip=FRACTION, fraction=0.005, elasticSlipStiffness=None)
 
-        if self.anType.startswith('Standard'):
+        if self.anSolverType.startswith('Standard'):
 
             if self.contType == 'Surface':
 
@@ -716,7 +725,7 @@ class ASym_Analysis(General_Analysis):
                 r12=self.mdb.models['Model-1'].rootAssembly.instances['Test_Article-1'].surfaces['Contact_Slave_Surf']
                 self.mdb.models['Model-1'].interactions['General Contact'].masterSlaveAssignments.appendInStep(stepName='Initial', assignments=((GLOBAL, r12, MASTER), ))
 
-        elif self.anType.startswith('Explicit'):
+        elif self.anSolverType.startswith('Explicit'):
 
             if self.contType == 'Surface':
 
@@ -740,6 +749,21 @@ class ASym_Analysis(General_Analysis):
                 self.mdb.models['Model-1'].interactions['General Contact'].contactPropertyAssignments.appendInStep(stepName='Initial', assignments=((GLOBAL, SELF, 'FrictionCoeff_'+('%0.2f'%self.contFriciton).replace('.','-')), ))
                 r12=self.mdb.models['Model-1'].rootAssembly.instances['Test_Article-1'].surfaces['Contact_Slave_Surf']
                 self.mdb.models['Model-1'].interactions['General Contact'].masterSlaveAssignments.appendInStep(stepName='Initial', assignments=((GLOBAL, r12, MASTER), ))
+
+        if self.anGeomType == 'AsymPillar':
+
+            if self.anSolverType.startswith('Standard'):
+
+                a = self.mdb.models['Model-1'].rootAssembly
+                region=a.instances['Test_Article-1'].surfaces['Self_Contact_Surf']
+                self.mdb.models['Model-1'].SelfContactStd(name='Test_Article_Self_Contact', createStepName='Initial', surface=region, interactionProperty='FrictionCoeff_0-00', thickness=ON)
+                # self.mdb.models['Model-1'].interactions['Test_Article_Self_Contact'].setValues(enforcement=NODE_TO_SURFACE, thickness=OFF, smooth=0.2, supplementaryContact=SELECTIVE)
+                # self.mdb.models['Model-1'].interactions['Test_Article_Self_Contact'].setValues(enforcement=NODE_TO_SURFACE, thickness=OFF, smooth=0.2, supplementaryContact=NEVER)
+                self.mdb.models['Model-1'].interactions['Test_Article_Self_Contact'].setValues(enforcement=NODE_TO_SURFACE, thickness=OFF, smooth=0.2, supplementaryContact=ALWAYS)
+
+            elif self.anSolverType.startswith('Explicit'):
+
+                pass ############### Not done yet (not necessary yet)
 
         return(None)
 
@@ -774,7 +798,7 @@ class ASym_Analysis(General_Analysis):
                 region=region, u1=SET, u2=UNSET, ur3=UNSET, amplitude=UNSET,
                 distributionType=UNIFORM, fieldName='', localCsys=None)
 
-        if self.anType.startswith('Standard'):
+        if self.anSolverType.startswith('Standard'):
 
             if self.bcType == 'Force':
 
@@ -802,7 +826,7 @@ class ASym_Analysis(General_Analysis):
                 region = self.mdb.models['Model-1'].rootAssembly.sets['mSet-1']
                 self.mdb.models['Model-1'].VelocityBC(name='Initial_Velocity', createStepName='Loading', region=region, v1=UNSET, v2=-self.bcIndVelocity, vr3=UNSET, amplitude=UNSET, localCsys=None, distributionType=UNIFORM, fieldName='')
 
-        elif self.anType.startswith('Explicit'):
+        elif self.anSolverType.startswith('Explicit'):
 
             self.ampFunction = 'Smooth'
 
@@ -853,8 +877,8 @@ class ASym_Indenter_Analysis(ASym_Analysis):
 
     def __init__(self,*args,**kwargs):
 
-        self.partTaType = args[0]
-        self.anType = args[1]
+        self.anGeomType = args[0]
+        self.anSolverType = args[1]
 
         from abaqus import Mdb
 
@@ -995,12 +1019,12 @@ class ASym_Indenter_Analysis(ASym_Analysis):
 
         from caeModules import mesh
 
-        if self.anType.startswith('Standard'):
+        if self.anSolverType.startswith('Standard'):
 
             elemType1 = mesh.ElemType(elemCode=CAX4, elemLibrary=STANDARD, secondOrderAccuracy=OFF, hourglassControl=DEFAULT, distortionControl=DEFAULT)
             elemType2 = mesh.ElemType(elemCode=CAX3, elemLibrary=STANDARD)
 
-        elif self.anType.startswith('Explicit'):
+        elif self.anSolverType.startswith('Explicit'):
 
             elemType1 = mesh.ElemType(elemCode=CAX4R, elemLibrary=EXPLICIT, secondOrderAccuracy=OFF, hourglassControl=DEFAULT, distortionControl=DEFAULT)
             elemType2 = mesh.ElemType(elemCode=CAX3, elemLibrary=EXPLICIT, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
@@ -1156,12 +1180,12 @@ class ASym_Indenter_Analysis(ASym_Analysis):
 
         from caeModules import mesh
 
-        if self.anType.startswith('Standard'):
+        if self.anSolverType.startswith('Standard'):
 
             elemType1 = mesh.ElemType(elemCode=CAX4, elemLibrary=STANDARD, secondOrderAccuracy=OFF, hourglassControl=DEFAULT, distortionControl=DEFAULT)
             elemType2 = mesh.ElemType(elemCode=CAX3, elemLibrary=STANDARD)
 
-        elif self.anType.startswith('Explicit'):
+        elif self.anSolverType.startswith('Explicit'):
 
             elemType1 = mesh.ElemType(elemCode=CAX4R, elemLibrary=EXPLICIT, secondOrderAccuracy=OFF, hourglassControl=DEFAULT, distortionControl=DEFAULT)
             elemType2 = mesh.ElemType(elemCode=CAX3, elemLibrary=EXPLICIT, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
@@ -1329,7 +1353,6 @@ class ASym_Indenter_Analysis(ASym_Analysis):
         charIndSizeFactor = kwargs.get('charIndSizeFactor',0.5)
 
         from caeModules import part, mesh
-        import numpy as np
 
         self.iAng = np.radians(self.partIndDAngle)
 
@@ -1482,7 +1505,7 @@ class ASym_Indenter_Analysis(ASym_Analysis):
                 p.Surface(side1Edges=side1Edges, name='Contact_Master_Surf')
 
                 e = self.mdb.models['Model-1'].parts['Deformable_Indenter'].edges
-                # print e.getBoundingBox()
+                # print(e.getBoundingBox())
                 edges = e.findAt(((5e-6, e.getBoundingBox()['high'][1], 0.0), ))
                 p.Set(edges=edges, name='Top_Set')
                 edges = e.findAt(((0.0, 5e-6, 0.0), ))
@@ -1560,7 +1583,7 @@ class ASym_Indenter_Analysis(ASym_Analysis):
                     p.Surface(side1Edges=side1Edges, name='Contact_Master_Surf')
 
                     e = self.mdb.models['Model-1'].parts['Deformable_Indenter'].edges
-                    # print e.getBoundingBox()
+                    # print(e.getBoundingBox())
                     edges = e.findAt(((5e-6, e.getBoundingBox()['high'][1], 0.0), ))
                     p.Set(edges=edges, name='Top_Set')
                     edges = e.findAt(((0.0, 5e-6, 0.0), ))
@@ -1673,12 +1696,12 @@ class ASym_Indenter_Analysis(ASym_Analysis):
             pickedRegions = f.getSequenceFromMask(mask=('[#1 ]', ), )
             p.setMeshControls(regions=pickedRegions, elemShape=QUAD, allowMapped=True)
 
-            if self.anType.startswith('Standard'):
+            if self.anSolverType.startswith('Standard'):
 
                 elemType1 = mesh.ElemType(elemCode=CAX4, elemLibrary=STANDARD, secondOrderAccuracy=OFF, hourglassControl=DEFAULT, distortionControl=DEFAULT)
                 elemType2 = mesh.ElemType(elemCode=CAX3, elemLibrary=STANDARD)
 
-            elif self.anType.startswith('Explicit'):
+            elif self.anSolverType.startswith('Explicit'):
 
                 elemType1 = mesh.ElemType(elemCode=CAX4R, elemLibrary=EXPLICIT, secondOrderAccuracy=OFF, hourglassControl=DEFAULT, distortionControl=DEFAULT)
                 elemType2 = mesh.ElemType(elemCode=CAX3, elemLibrary=EXPLICIT)
@@ -1700,7 +1723,6 @@ class ASym_Indenter_Analysis(ASym_Analysis):
         self.bcIndOffset = kwargs.get('bcIndOffset',0.0)
 
         from caeModules import assembly
-        from math import cos
 
         self.mdb.models['Model-1'].rootAssembly.DatumCsysByThreePoints(coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(1.0, 0.0, 0.0), point2=(0.0, 0.0, -1.0))
 
@@ -1711,7 +1733,7 @@ class ASym_Indenter_Analysis(ASym_Analysis):
             self.mdb.models['Model-1'].rootAssembly.Instance(name='Indenter-1', part=self.mdb.models['Model-1'].parts['Analytic_Indenter'], dependent=ON)
             self.mdb.models['Model-1'].rootAssembly.translate(instanceList=('Indenter-1', ), vector=(0.0, self.bcIndOffset, 0.0))
 
-            rp1Coord = (0.0,self.charIndSize*cos(self.iAng) + self.bcIndOffset)
+            rp1Coord = (0.0,self.charIndSize*np.cos(self.iAng) + self.bcIndOffset)
 
         elif self.partIndType == 'Deformable':
 
@@ -1758,8 +1780,6 @@ class General_Output(object):
             headerRow.append('ALLSE/ALLIE')
 
         print('Energy Histories - Header Row:\n%s\n' %(headerRow))
-
-        import csv
 
         resCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + 'WholeModelHistory' + '.csv')
 
@@ -1810,7 +1830,7 @@ class General_Output(object):
                             tempRow.append(0.0)
                             tempRow.append(0.0)
 
-                    # print tempRow
+                    # print(tempRow)
 
                     csvWriter.writerow(tempRow)
 
@@ -1823,8 +1843,6 @@ class General_Output(object):
     def ContactForceVector(self,*args,**kwargs):
 
         writeCSV = kwargs.get('writeCSV', True)
-
-        from numpy import arctan,degrees
 
         for key in self.odb.steps['Loading'].frames[-1].fieldOutputs.keys():
 
@@ -1850,7 +1868,7 @@ class General_Output(object):
 
             totalContactForceVector[1] = totalContactForceVector[1] + sortedCNORMF[i][4]
 
-            # print totalContactForceVector
+            # print(totalContactForceVector)
 
         for i in range(len(sortedCSHEARF)):
 
@@ -1858,21 +1876,19 @@ class General_Output(object):
 
             totalContactForceVector[1] = totalContactForceVector[1] + sortedCSHEARF[i][4]
 
-            # print totalContactForceVector
+            # print(totalContactForceVector)
 
         for i in range(len(totalContactForceVector)):
 
-            totalContactForceVector[2] = arctan(totalContactForceVector[0]/totalContactForceVector[1])
+            totalContactForceVector[2] = np.arctan(totalContactForceVector[0]/totalContactForceVector[1])
 
-            totalContactForceVector[3] = degrees(totalContactForceVector[2])
+            totalContactForceVector[3] = np.degrees(totalContactForceVector[2])
 
-            totalContactForceVector[4] = arctan(totalContactForceVector[1]/totalContactForceVector[0])
+            totalContactForceVector[4] = np.arctan(totalContactForceVector[1]/totalContactForceVector[0])
 
-            totalContactForceVector[5] = degrees(totalContactForceVector[4])
+            totalContactForceVector[5] = np.degrees(totalContactForceVector[4])
 
         if writeCSV:
-
-            import csv
 
             titleRow = ['CFORCE1','CFORCE2','ANGLEvert(rad)','ANGLEvert(deg)','ANGLEhoriz(rad)','ANGLEhoriz(deg)','contactRadius']
 
@@ -1919,7 +1935,7 @@ class General_Output(object):
 
         #-----------------------------------------------------------------------
 
-        # print self.odb.steps[stepName].frames[frameNumber].fieldOutputs.keys()
+        # print(self.odb.steps[stepName].frames[frameNumber].fieldOutputs.keys())
 
         try: self.odb.steps[stepName].frames[frameNumber].fieldOutputs[resultName].values[0].nodeLabel
         except: return(1)
@@ -1939,9 +1955,23 @@ class General_Output(object):
 
             if includePE:
 
-                resultPE = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['PE'].getSubset(region=elementSet)
+                if 'PEEQ' in self.odb.steps[stepName].frames[frameNumber].fieldOutputs.keys():
 
-                titleRow = ['nodeLabel'] + list(coordSet.componentLabels) + list(resultSet.componentLabels) + [resultPE.name]
+                    presentPEEQ = True
+
+                    resultPE = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['PE'].getSubset(region=elementSet)
+
+                    resultPEEQ = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['PEEQ'].getSubset(region=elementSet)
+
+                    titleRow = ['nodeLabel'] + list(coordSet.componentLabels) + list(resultSet.componentLabels) + [resultPE.name] + [resultPEEQ.name]
+
+                else:
+
+                    presentPEEQ = False
+
+                    resultPE = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['PE'].getSubset(region=elementSet)
+
+                    titleRow = ['nodeLabel'] + list(coordSet.componentLabels) + list(resultSet.componentLabels) + [resultPE.name]
 
             else:
 
@@ -1955,15 +1985,19 @@ class General_Output(object):
 
                 if includePE:
 
-                    unsortedResults.append([nodeSet.nodes[i].label] + coordSet.values[i].data.tolist() + resultSet.values[i].data.tolist() + resultPE.values[i].data.tolist())
+                    if presentPEEQ:
+
+                        unsortedResults.append([nodeSet.nodes[i].label] + coordSet.values[i].data.tolist() + resultSet.values[i].data.tolist() + resultPE.values[i].data.tolist() + [resultPEEQ.values[i].data])
+
+                    else:
+
+                        unsortedResults.append([nodeSet.nodes[i].label] + coordSet.values[i].data.tolist() + resultSet.values[i].data.tolist() + resultPE.values[i].data.tolist())
 
                 else:
 
                     unsortedResults.append([nodeSet.nodes[i].label] + coordSet.values[i].data.tolist() + resultSet.values[i].data.tolist())
 
         elif self.odb.steps[stepName].frames[frameNumber].fieldOutputs[resultName].values[0].elementLabel:
-
-            from numpy import zeros
 
             print('Running Sorting Routine:')
             print('  Part Instance: %s , elementSet: %s' %(instanceName, setName))
@@ -1981,18 +2015,39 @@ class General_Output(object):
 
             if includePE:
 
-                if specialLocation is not None: resultPE = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['PE'].getSubset(region=elementSet,position=specialLocation)
-                else: resultPE = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['PE'].getSubset(region=elementSet)
+                if 'PEEQ' in self.odb.steps[stepName].frames[frameNumber].fieldOutputs.keys():
 
-                if resultSet.componentLabels: titleRow = ['elementLabel'] + list(coordSet.componentLabels) + list(resultSet.componentLabels) + list(resultPE.componentLabels)
-                else: titleRow = ['elementLabel'] + list(coordSet.componentLabels) + [resultSet.name] + list(resultPE.componentLabels)
+                    presentPEEQ = True
+
+                    if specialLocation is not None:
+
+                        resultPE = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['PE'].getSubset(region=elementSet,position=specialLocation)
+                        resultPEEQ = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['PEEQ'].getSubset(region=elementSet,position=specialLocation)
+
+                    else:
+
+                        resultPE = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['PE'].getSubset(region=elementSet)
+                        resultPEEQ = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['PEEQ'].getSubset(region=elementSet)
+
+                    if resultSet.componentLabels: titleRow = ['elementLabel'] + list(coordSet.componentLabels) + list(resultSet.componentLabels) + list(resultPE.componentLabels) + [resultPEEQ.name]
+                    else: titleRow = ['elementLabel'] + list(coordSet.componentLabels) + [resultSet.name] + list(resultPE.componentLabels) + [resultPEEQ.name]
+
+                else:
+
+                    presentPEEQ = False
+
+                    if specialLocation is not None: resultPE = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['PE'].getSubset(region=elementSet,position=specialLocation)
+                    else: resultPE = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['PE'].getSubset(region=elementSet)
+
+                    if resultSet.componentLabels: titleRow = ['elementLabel'] + list(coordSet.componentLabels) + list(resultSet.componentLabels) + list(resultPE.componentLabels)
+                    else: titleRow = ['elementLabel'] + list(coordSet.componentLabels) + [resultSet.name] + list(resultPE.componentLabels)
 
             else:
 
                 if resultSet.componentLabels: titleRow = ['elementLabel'] + list(coordSet.componentLabels) + list(resultSet.componentLabels)
                 else: titleRow = ['elementLabel'] + list(coordSet.componentLabels) + [resultSet.name]
 
-            #print resultSet.values[0]
+            #print(resultSet.values[0])
 
             coordSetNodes = []
 
@@ -2000,7 +2055,7 @@ class General_Output(object):
 
                 coordSetNodes.append(coordSet.values[i].nodeLabel)
 
-            #print coordSetNodes
+            #print(coordSetNodes)
 
             unsortedResults = []
 
@@ -2008,7 +2063,7 @@ class General_Output(object):
 
                 tempNodeCount = 0
 
-                tempCoordSum = zeros(len(coordSet.values[0].data))
+                tempCoordSum = np.zeros(len(coordSet.values[0].data))
 
                 for j in range(len(elementSet.elements[i].connectivity)):
 
@@ -2030,8 +2085,20 @@ class General_Output(object):
 
                         if includePE:
 
-                            try: unsortedResults.append([elementSet.elements[i].label] + tempCoordSum.tolist() + resultSet.values[m].data.tolist() + resultPE.values[m].data.tolist() )
-                            except AttributeError: unsortedResults.append([elementSet.elements[i].label] + tempCoordSum.tolist() + [resultSet.values[m].data] + resultPE.values[m].data.tolist() )
+                            if presentPEEQ:
+
+                                try:
+
+                                    unsortedResults.append([elementSet.elements[i].label] + tempCoordSum.tolist() + resultSet.values[m].data.tolist() + resultPE.values[m].data.tolist() + [resultPEEQ.values[m].data] )
+
+                                except AttributeError:
+
+                                    unsortedResults.append([elementSet.elements[i].label] + tempCoordSum.tolist() + [resultSet.values[m].data] + resultPE.values[m].data.tolist() + [resultPEEQ.values[m].data] )
+
+                            else:
+
+                                try: unsortedResults.append([elementSet.elements[i].label] + tempCoordSum.tolist() + resultSet.values[m].data.tolist() + resultPE.values[m].data.tolist() )
+                                except AttributeError: unsortedResults.append([elementSet.elements[i].label] + tempCoordSum.tolist() + [resultSet.values[m].data] + resultPE.values[m].data.tolist() )
 
                         else:
 
@@ -2041,11 +2108,9 @@ class General_Output(object):
         if sortedResults: finalResults = sorted(unsortedResults, key=lambda unsortedResults: unsortedResults[abs(sortDirection)], reverse=reverse)
         else: finalResults = unsortedResults
 
-        #for i in range(len(finalResults)): print finalResults[i]
+        #for i in range(len(finalResults)): print(finalResults[i])
 
         if writeCSV:
-
-            import csv
 
             if resultName.startswith('CNORMF'): resultName = 'CNORMF'
             if resultName.startswith('CSHEARF'): resultName = 'CSHEARF'
@@ -2090,7 +2155,7 @@ class General_Output(object):
 
         #-----------------------------------------------------------------------
 
-        # print self.odb.steps[stepName].frames[frameNumber].fieldOutputs.keys()
+        # print(self.odb.steps[stepName].frames[frameNumber].fieldOutputs.keys())
 
         try: self.odb.steps[stepName].frames[frameNumber].fieldOutputs[resultName].values[0].nodeLabel
         except: return(1)
@@ -2131,8 +2196,6 @@ class General_Output(object):
                     unsortedResults.append([nodeSet.nodes[i].label] + resultSet.values[i].data.tolist())
 
         elif self.odb.steps[stepName].frames[frameNumber].fieldOutputs[resultName].values[0].elementLabel:
-
-            from numpy import zeros
 
             print('Running Sorting Routine:')
             print('  Part Instance: %s , elementSet: %s' %(instanceName, setName))
@@ -2175,11 +2238,9 @@ class General_Output(object):
 
         finalResults = unsortedResults
 
-        #for i in range(len(finalResults)): print finalResults[i]
+        #for i in range(len(finalResults)): print(finalResults[i])
 
         if writeCSV:
-
-            import csv
 
             if resultName.startswith('CNORMF'): resultName = 'CNORMF'
             if resultName.startswith('CSHEARF'): resultName = 'CSHEARF'
@@ -2216,15 +2277,11 @@ class Indentation_Output(General_Output):
 
         readOnly = kwargs.get('readOnly', True)
 
-        from os import chdir
-
         from odbAccess import openOdb, OdbError
-
-        from subprocess import call
 
         odbName = odbPath.split('/')[-1].split('\\')[-1]
         print("Opening ODB: %s \n\n\n" %(odbName))
-        chdir(odbPath.rstrip(odbName))
+        os.chdir(odbPath.rstrip(odbName))
 
         try:
 
@@ -2274,7 +2331,7 @@ class Indentation_Output(General_Output):
 
                 try:
 
-                    call("abaqus -upgrade -job %s -odb %s" %(str(odbName)[:-4]+'_upg',str(odbName)[:-4]), shell=True)
+                    subprocess.call("abaqus -upgrade -job %s -odb %s" %(str(odbName)[:-4]+'_upg',str(odbName)[:-4]), shell=True)
 
                     odbName = str(odbName)[:-4]+'_upg.odb'
 
@@ -2285,7 +2342,7 @@ class Indentation_Output(General_Output):
                     print('Error: Could not open ODB file - (%s)' %(odbPath))
                     exit()
 
-        # print self.odb
+        # print(self.odb)
 
         return(None)
 
@@ -2302,10 +2359,6 @@ class Indentation_Output(General_Output):
         fileNameSuffix = kwargs.get('fileNameSuffix', '')
 
         print('Running Work-Force-Distance Routine:\n')
-
-        from numpy import degrees, arctan
-
-        import csv
 
         if instanceNameRF and nodeSetNameRF: nodeSetRF = self.odb.rootAssembly.instances[instanceNameRF].nodeSets[nodeSetNameRF]
         elif nodeSetNameRF: nodeSetRF = self.odb.rootAssembly.nodeSets[nodeSetNameRF]
@@ -2366,7 +2419,7 @@ class Indentation_Output(General_Output):
 
                     if fileNameSuffix == '_Ind': totalRF2 = -totalRF2 #Changes sign on the reaction force on the "Ind"enter end (Other method is on the "Base" of the test article)
 
-                    try: Angle12 = degrees(arctan(totalRF2/totalRF1))
+                    try: Angle12 = np.degrees(np.arctan(totalRF2/totalRF1))
 
                     except:
 
@@ -2450,27 +2503,21 @@ class Indentation_Output(General_Output):
         xLimit = kwargs.get('xLimit', None)
         writeCSV = kwargs.get('writeCSV', True)
 
-        import csv
-
-        from numpy import pi
-
         volNegSum = 0.0
-
         volPosSum = 0.0
-
         volTotSum = 0.0
 
         for i in range(len(sortedNodeSet)-1):
 
-            # print sortedNodeSet[i][2]
+            # print(sortedNodeSet[i][2])
 
             # #The top equation should be "half" the value
 
-            # volInc = ((sortedNodeSet[i][2]+sortedNodeSet[i+1][2])/2.0) * (sortedNodeSet[i+1][1]-sortedNodeSet[i][1])   *    pi * ((sortedNodeSet[i][1]+sortedNodeSet[i+1][1])/2.0)
+            # volInc = ((sortedNodeSet[i][2]+sortedNodeSet[i+1][2])/2.0) * (sortedNodeSet[i+1][1]-sortedNodeSet[i][1])   *    np.pi * ((sortedNodeSet[i][1]+sortedNodeSet[i+1][1])/2.0)
 
-            volInc = 0.5 * (sortedNodeSet[i][2]+sortedNodeSet[i+1][2]) * (sortedNodeSet[i+1][1]-sortedNodeSet[i][1])   *    pi * (sortedNodeSet[i][1]+sortedNodeSet[i+1][1])
+            volInc = 0.5 * (sortedNodeSet[i][2]+sortedNodeSet[i+1][2]) * (sortedNodeSet[i+1][1]-sortedNodeSet[i][1])   *    np.pi * (sortedNodeSet[i][1]+sortedNodeSet[i+1][1])
 
-            # print volInc
+            # print(volInc)
 
             volTotSum += volInc
 
@@ -2515,15 +2562,7 @@ class Indentation_Output(General_Output):
 
         '''This function is currently in work. It is intended to get numerous "normalizer" values and put them in a csv'''
 
-        #-----------------------------------------------------------------------
-
         writeCSV = kwargs.get('writeCSV', True)
-
-        #-----------------------------------------------------------------------
-
-        import csv
-
-        from numpy import pi
 
         normalVars = {}
 
@@ -2534,7 +2573,7 @@ class Indentation_Output(General_Output):
         #-----------------------------------------------------------------------
         sortedElementSet = self.GeneralResults(sortedResults=True,sortDirection=-1,stepName='Loading',instanceName='TEST_ARTICLE-1',setName='RESULTS_SURF_SET', resultName='PE', writeCSV=False)
 
-        # for value in sortedElementSet: print value
+        # for value in sortedElementSet: print(value)
 
         for value in sortedElementSet:
 
@@ -2551,7 +2590,7 @@ class Indentation_Output(General_Output):
         #-----------------------------------------------------------------------
         sortedElementSet = self.GeneralResults(sortedResults=True,sortDirection=2,stepName='Loading',instanceName='TEST_ARTICLE-1',setName='RESULTS_CL_SET', resultName='PE', writeCSV=False)
 
-        # for value in sortedElementSet: print value
+        # for value in sortedElementSet: print(value)
 
         for value in sortedElementSet:
 
@@ -2568,7 +2607,7 @@ class Indentation_Output(General_Output):
         #-----------------------------------------------------------------------
         sortedElementSet = self.GeneralResults(sortedResults=True,sortDirection=-1,stepName='Unloading',instanceName='TEST_ARTICLE-1',setName='RESULTS_SURF_SET', resultName='PE', writeCSV=False)
 
-        # for value in sortedElementSet: print value
+        # for value in sortedElementSet: print(value)
 
         for value in sortedElementSet:
 
@@ -2585,7 +2624,7 @@ class Indentation_Output(General_Output):
         #-----------------------------------------------------------------------
         sortedElementSet = self.GeneralResults(sortedResults=True,sortDirection=2,stepName='Unloading',instanceName='TEST_ARTICLE-1',setName='RESULTS_CL_SET', resultName='PE', writeCSV=False)
 
-        # for value in sortedElementSet: print value
+        # for value in sortedElementSet: print(value)
 
         for value in sortedElementSet:
 
@@ -2606,13 +2645,13 @@ class Indentation_Output(General_Output):
         #-----------------------------------------------------------------------
         sortedElementSet = self.GeneralResults(sortedResults=True,sortDirection=2,stepName='Loading',instanceName='TEST_ARTICLE-1',setName='RESULTS_CL_SET', resultName='COORD', writeCSV=False)
 
-        # for value in sortedElementSet: print value
+        # for value in sortedElementSet: print(value)
 
         normalVars['indentDepth_IndentY'] = sortedElementSet[-1][-1]
         #-----------------------------------------------------------------------
         sortedElementSet = self.GeneralResults(sortedResults=True,sortDirection=2,stepName='Unloading',instanceName='TEST_ARTICLE-1',setName='RESULTS_CL_SET', resultName='COORD', writeCSV=False)
 
-        # for value in sortedElementSet: print value
+        # for value in sortedElementSet: print(value)
 
         normalVars['indentDepth_RemoveY'] = sortedElementSet[-1][-1]
         #-----------------------------------------------------------------------
@@ -2657,7 +2696,7 @@ class Indentation_Output(General_Output):
         try: normalVars['plasticZoneHeight_RemoveY'] = normalVars['plasticEdge_RemoveY'] - normalVars['indentDepth_RemoveY']
         except: normalVars['plasticZoneHeight_RemoveY'] = None
         #-----------------------------------------------------------------------
-        try: normalVars['calculated_Hardness'] = normalVars['maxRF2_Total'] / (pi * (normalVars['contactEdge_RemoveX'])**2.0)
+        try: normalVars['calculated_Hardness'] = normalVars['maxRF2_Total'] / (np.pi * (normalVars['contactEdge_RemoveX'])**2.0)
         except: normalVars['calculated_Hardness'] = None
         #-----------------------------------------------------------------------
 
@@ -2665,8 +2704,6 @@ class Indentation_Output(General_Output):
         for key in normalVars.keys(): print('Key: %s  Value: %s\n' %(key,normalVars[key]))
 
         if writeCSV:
-
-            import csv
 
             resCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + 'normVars' + '.csv')
 
@@ -2711,14 +2748,12 @@ class Indentation_Output(General_Output):
 
         #-----------------------------------------------------------------------
 
-        # print self.odb.steps[stepName].frames[frameNumber].fieldOutputs.keys()
+        # print(self.odb.steps[stepName].frames[frameNumber].fieldOutputs.keys())
 
         try: self.odb.steps[stepName].frames[frameNumber].fieldOutputs[resultName].values[0].nodeLabel
         except: return(1)
 
         if self.odb.steps[stepName].frames[frameNumber].fieldOutputs[resultName].values[0].elementLabel:
-
-            from numpy import zeros
 
             print('Running Sorting Routine:')
             print('  Part Instance: %s , elementSet: %s' %(instanceName, setName))
@@ -2751,7 +2786,7 @@ class Indentation_Output(General_Output):
 
                 coordSetNodes.append(coordSet.values[i].nodeLabel)
 
-            #print coordSetNodes
+            #print(coordSetNodes)
 
             unsortedResults = []
 
@@ -2759,7 +2794,7 @@ class Indentation_Output(General_Output):
 
                 tempNodeCount = 0
 
-                tempCoordSum = zeros(len(coordSet.values[0].data))
+                tempCoordSum = np.zeros(len(coordSet.values[0].data))
 
                 for j in range(len(elementSet.elements[i].connectivity)):
 
@@ -2798,11 +2833,9 @@ class Indentation_Output(General_Output):
         if sortedResults: finalResults = sorted(unsortedResults, key=lambda unsortedResults: unsortedResults[abs(sortDirection)], reverse=reverse)
         else: finalResults = unsortedResults
 
-        #for i in range(len(finalResults)): print finalResults[i]
+        #for i in range(len(finalResults)): print(finalResults[i])
 
         if writeCSV:
-
-            import csv
 
             if resultName.startswith('CNORMF'): resultName = 'CNORMF'
             if resultName.startswith('CSHEARF'): resultName = 'CSHEARF'
@@ -2838,13 +2871,9 @@ class Indentation_Output(General_Output):
         includePE =  kwargs.get('includePE', False)
         writeCSV = kwargs.get('writeCSV', True)
 
-        import csv
-
         frameId = self.odb.steps[stepName].frames[frameNumber].frameId
 
         #-----------------------------------------------------------------------
-
-        from numpy import zeros
 
         print('Running Unsorted Results Routine:')
         print('  Part Instance: %s , elementSet: %s' %(instanceName, setName))
@@ -2868,8 +2897,6 @@ class Indentation_Output(General_Output):
 
             titleRow = ['elementLabel'] + ['maxPrincipal', 'midPrincipal', 'minPrincipal', 'press', 'mises']
 
-        import numpy as np
-
         unsortedResults = []
 
         for m in range(len(resultSet.values)):
@@ -2892,7 +2919,7 @@ class Indentation_Output(General_Output):
 
         finalResults = unsortedResults
 
-        #for i in range(len(finalResults)): print finalResults[i]
+        #for i in range(len(finalResults)): print(finalResults[i])
 
         if writeCSV:
 
@@ -2916,7 +2943,380 @@ class Indentation_Output(General_Output):
 
     #-----------------------------------------------------------------------
 
-    def UnsortedResultsZone(self,*args,**kwargs):
+    def UnsortedResultsZone(self,*args,**kwargs): # Uses the updated numpy.array method (instead of lists)
+
+        stepName = kwargs.get('stepName', 'Initial')
+        frameNumber = kwargs.get('frameNumber', -1)
+        instanceName = kwargs.get('instanceName', None)
+        setName = kwargs.get('setName', None)
+        resultName = kwargs.get('resultName', 'PE')
+        limitResult = kwargs.get('limitResult', None)
+        limitTypeResult = kwargs.get('limitTypeResult', 'lower')
+        specialLocation = kwargs.get('specialLocation', None)
+        limitPE = kwargs.get('limitPE', 1e-05)
+        limitTypePE = kwargs.get('limitType', 'lower')
+        writeCSV = kwargs.get('writeCSV', True)
+
+        print('Running Unsorted Results Routine:')
+        print('  Part Instance: %s , elementSet: %s' %(instanceName, setName))
+        print('  Step Name: %s , Frame Index: %s, Frame Id: %s' %(stepName,frameNumber,self.odb.steps[stepName].frames[frameNumber].frameId))
+        print('  Data Key: %s\n' %(resultName))
+
+        #-----------------------------------------------------------------------
+
+        resultCategory = resultName.rstrip('1').rstrip('2').rstrip('3')
+
+        nodeSet = self.odb.rootAssembly.instances[instanceName].nodeSets[setName]
+
+        elementSet = self.odb.rootAssembly.instances[instanceName].elementSets[setName]
+
+        coordSet = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['COORD'].getSubset(region=nodeSet)
+
+        if len(self.odb.steps[stepName].frames[frameNumber].fieldOutputs['COORD'].getSubset(region=elementSet).values) > 0:
+
+            coordElementSet = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['COORD'].getSubset(region=elementSet)
+
+        else:
+
+            coordSetNodes = np.array([value.nodeLabel for value in coordSet.values])
+
+        if specialLocation is not None:
+
+            resultSet = self.odb.steps[stepName].frames[frameNumber].fieldOutputs[resultCategory].getSubset(region=elementSet,position=specialLocation)
+
+            resultPE = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['PE'].getSubset(region=elementSet,position=specialLocation)
+
+        else:
+
+            resultSet = self.odb.steps[stepName].frames[frameNumber].fieldOutputs[resultCategory].getSubset(region=elementSet)
+
+            resultPE = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['PE'].getSubset(region=elementSet)
+
+        #-----------------------------------------------------------------------
+        # This is the filtered elemental results section, where selections are made before sorting occurs
+        # It gets results and uses np.nan (to keep) and np.inf (to delete) rows that are outside the filter criteria
+        #-----------------------------------------------------------------------
+
+        # filteredResults = np.zeros(( len(elementSet.elements), len(np.zeros(len(coordSet.componentLabels)).tolist()) + 1 + len(resultSet.values[0].data.tolist()) + len(resultPE.values[0].data.tolist()) + 1 ))
+        filteredResults = np.zeros(( len(elementSet.elements), len(coordSet.componentLabels) + 1 + len(resultSet.values[0].data.tolist()) + len(resultPE.values[0].data.tolist()) + 1 ))
+
+        for i in range(len(elementSet.elements)):
+
+            if resultName in resultSet.componentLabels: # Components
+
+                minResult = maxResult = resultSet.values[i].data[resultSet.componentLabels.index(resultName)]
+
+            else: # Categories
+
+                minResult = min(resultSet.values[i].data)
+                maxResult = max(resultSet.values[i].data)
+
+            minPE = abs(min(resultPE.values[i].data,key=abs))
+            maxPE = abs(max(resultPE.values[i].data,key=abs))
+
+            filteredResults[i] = np.array(np.zeros(len(coordSet.componentLabels)).tolist() + [resultSet.values[i].elementLabel] + resultSet.values[i].data.tolist() + resultPE.values[i].data.tolist() + [np.nan])
+
+            # If statement are to eliminate entries if they are true
+            #   (for results categories, all entries must violate the limit to be eliminated)
+            #   (for PE category, any entry can violate the limit to be eliminated)
+
+            if limitTypeResult == 'lower' and maxResult < limitResult:
+
+                filteredResults[i,-1] = np.inf
+
+            if limitTypeResult == 'upper' and minResult > limitResult:
+
+                filteredResults[i,-1] = np.inf
+
+            if limitTypePE == 'lower' and minPE < limitPE:
+
+                filteredResults[i,-1] = np.inf
+
+            if limitTypePE == 'upper' and maxPE > limitPE:
+
+                filteredResults[i,-1] = np.inf
+
+            if not ( filteredResults[i,-1] == np.inf ):
+
+                if 'coordElementSet' in locals():
+
+                    filteredResults[i,0:len(coordElementSet.values[i].data.tolist())] = coordElementSet.values[i].data.tolist()
+
+                else:
+
+                    # #-----------------------------------------------------------------------
+
+                    # connectedNodes = elementSet.elements[i].connectivity
+                    # numConnectedNodes = len(connectedNodes)
+                    # numComponents = len(coordSet.componentLabels)
+
+                    # tempCoords = np.zeros(numComponents)
+
+                    # for j in range(len(connectedNodes)):
+
+                    #     tempCoords[0:numComponents] = tempCoords[0:numComponents] + ( np.array(coordSet.values[coordSetNodes.index(connectedNodes[j])].data) / float(len(connectedNodes)) )
+
+                    # # print(tempCoords)
+
+                    # filteredResults[i,0:numComponents] = tempCoords
+
+                    # #-----------------------------------------------------------------------
+
+                    #-----------------------------------------------------------------------
+
+                    tempNodeCount = 0
+
+                    tempElementCoords = np.zeros(len(coordSet.values[0].data))
+
+                    for j in range(len(elementSet.elements[i].connectivity)):
+
+                        for k in range(len(coordSet.values)):
+
+                            if elementSet.elements[i].connectivity[j] == coordSet.values[k].nodeLabel:
+
+                                for n in range(len(tempElementCoords)):
+
+                                    tempElementCoords[n] = tempElementCoords[n] + ( coordSet.values[k].data[n] / float(len(elementSet.elements[i].connectivity)) )
+
+                                tempNodeCount += 1
+
+                                break
+
+                        if tempNodeCount == len(elementSet.elements[i].connectivity):
+
+                            break
+
+                    filteredResults[i,0:len(coordSet.componentLabels)] = np.array(tempElementCoords)
+
+                    #-----------------------------------------------------------------------
+
+        filteredResults = filteredResults[np.isnan(filteredResults).any(axis=1)]
+
+        #-----------------------------------------------------------------------
+
+        if writeCSV:
+
+            resCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + resultName + '_' + 'ResultsZone' + '_' + ('%1.0E'%(limitPE)).rstrip('0').rstrip('.') + '_' + stepName + '.csv')
+
+            print('Writing CSV File: %s\n\n\n' %(resCSVname))
+
+            titleRow = list(coordSet.componentLabels) + ['Element Label'] + list(resultSet.componentLabels) + list(resultPE.componentLabels)
+
+            tempFile = open(resCSVname, 'wb')
+
+            with open(resCSVname, 'wb') as tempFile:
+
+                csvWriter = csv.writer(tempFile)
+
+                csvWriter.writerow(titleRow)
+
+                for i in range(filteredResults.shape[0]):
+
+                    csvWriter.writerow(filteredResults[i].tolist()[0:-1])
+
+        return(filteredResults)
+
+    #-----------------------------------------------------------------------
+
+    def DensityGeneralResults(self,*args,**kwargs):
+
+        sortedResults = kwargs.get('sortedResults', False)
+        sortDirection = kwargs.get('sortDirection', 1)
+        stepName = kwargs.get('stepName', 'Initial')
+        frameNumber = kwargs.get('frameNumber', -1)
+        instanceName = kwargs.get('instanceName', None)
+        setName = kwargs.get('setName', None)
+        resultName = kwargs.get('resultName', 'COORD')
+        specialLocation = kwargs.get('specialLocation', None)
+        includePE =  kwargs.get('includePE', False)
+        writeCSV = kwargs.get('writeCSV', True)
+
+        if sortDirection > 0: reverse = False
+        elif sortDirection < 0: reverse = True
+
+        try: self.odb.steps[stepName].frames[frameNumber].frameId
+        except: return(1)
+
+        frameId = self.odb.steps[stepName].frames[frameNumber].frameId
+
+        unsortedResultSet = []
+
+        #-----------------------------------------------------------------------
+
+        # print(self.odb.steps[stepName].frames[frameNumber].fieldOutputs.keys())
+
+        try: self.odb.steps[stepName].frames[frameNumber].fieldOutputs[resultName].values[0].nodeLabel
+        except: return(1)
+
+        if self.odb.steps[stepName].frames[frameNumber].fieldOutputs[resultName].values[0].nodeLabel:
+
+            print('Running Sorting Routine:')
+            print('  Part Instance: %s , nodeSet: %s' %(instanceName, setName))
+            print('  Step Name: %s , Frame Index: %s, Frame Id: %s' %(stepName,frameNumber,frameId))
+            print('  Data Key: %s , Sort Direciton: %s\n' %(resultName, sortDirection))
+
+            nodeSet = self.odb.rootAssembly.instances[instanceName].nodeSets[setName]
+
+            coordSet = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['COORD'].getSubset(region=nodeSet)
+
+            resultSet = self.odb.steps[stepName].frames[frameNumber].fieldOutputs[resultName].getSubset(region=nodeSet)
+
+            calculatedSet = []
+
+            if includePE:
+
+                resultPE = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['PE'].getSubset(region=elementSet)
+
+                titleRow = ['nodeLabel'] + list(coordSet.componentLabels) + list(resultSet.componentLabels) + [resultPE.name]
+
+            else:
+
+                titleRow = ['nodeLabel'] + list(coordSet.componentLabels) + list(resultSet.componentLabels)
+
+            #for i in range(len(nodeSet.nodes)): print('%s, %s, %s' %(nodeSet.nodes[i].label,coordSet.values[i].nodeLabel,resultSet.values[i].nodeLabel))
+
+            unsortedResults = []
+
+            for i in range(len(nodeSet.nodes)):
+
+                if includePE:
+
+                    unsortedResults.append([nodeSet.nodes[i].label] + coordSet.values[i].data.tolist() + resultSet.values[i].data.tolist() + resultPE.values[i].data.tolist())
+
+                else:
+
+                    unsortedResults.append([nodeSet.nodes[i].label] + coordSet.values[i].data.tolist() + resultSet.values[i].data.tolist())
+
+        elif self.odb.steps[stepName].frames[frameNumber].fieldOutputs[resultName].values[0].elementLabel:
+
+            print('Running Sorting Routine:')
+            print('  Part Instance: %s , elementSet: %s' %(instanceName, setName))
+            print('  Step Name: %s , Frame Index: %s, Frame Id: %s' %(stepName,frameNumber,frameId))
+            print('  Data Key: %s , Sort Direciton: %s\n' %(resultName, sortDirection))
+
+            nodeSet = self.odb.rootAssembly.instances[instanceName].nodeSets[setName]
+
+            elementSet = self.odb.rootAssembly.instances[instanceName].elementSets[setName]
+
+            coordSet = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['COORD'].getSubset(region=nodeSet)
+
+            if specialLocation is not None: resultSet = self.odb.steps[stepName].frames[frameNumber].fieldOutputs[resultName].getSubset(region=elementSet,position=specialLocation)
+            else: resultSet = self.odb.steps[stepName].frames[frameNumber].fieldOutputs[resultName].getSubset(region=elementSet)
+
+            if includePE:
+
+                if specialLocation is not None: resultPE = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['PE'].getSubset(region=elementSet,position=specialLocation)
+                else: resultPE = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['PE'].getSubset(region=elementSet)
+
+                if resultSet.componentLabels: titleRow = ['elementLabel'] + list(coordSet.componentLabels) + list(resultSet.componentLabels) + list(resultPE.componentLabels)
+                else: titleRow = ['elementLabel'] + list(coordSet.componentLabels) + [resultSet.name] + ['normDp']+ list(resultPE.componentLabels)
+
+            else:
+
+                if resultSet.componentLabels: titleRow = ['elementLabel'] + list(coordSet.componentLabels) + list(resultSet.componentLabels)
+                else: titleRow = ['elementLabel'] + list(coordSet.componentLabels) + [resultSet.name] + ['normDp']
+
+            # for result in resultSet.values: print(result.data)
+
+            #Normalized Change in Density Calculations
+
+            if resultName == 'RD' or resultName == 'DENSITY':
+
+                initialRD = self.odb.steps['Loading'].frames[0].fieldOutputs[resultName].getSubset(region=elementSet).values[0].data
+
+                # print(initialRD)
+
+                normDpSet = []
+
+                for result in resultSet.values:
+
+                    normDpSet.append((result.data-initialRD)/initialRD)
+
+            elif resultName == 'PEQC4':
+
+                normDpSet = []
+
+                for result in resultSet.values:
+
+                    normDpSet.append(np.exp(-result.data) - 1.0)
+
+            #print(resultSet.values[0])
+
+            coordSetNodes = []
+
+            for i in range(len(coordSet.values)):
+
+                coordSetNodes.append(coordSet.values[i].nodeLabel)
+
+            #print(coordSetNodes)
+
+            unsortedResults = []
+
+            for i in range(len(elementSet.elements)):
+
+                tempNodeCount = 0
+
+                tempCoordSum = np.zeros(len(coordSet.values[0].data))
+
+                for j in range(len(elementSet.elements[i].connectivity)):
+
+                    if elementSet.elements[i].connectivity[j] in coordSetNodes:
+
+                        tempNodeCount += 1
+
+                        for n in range(len(tempCoordSum)):
+
+                            tempCoordSum[n] += coordSet.values[coordSetNodes.index(elementSet.elements[i].connectivity[j])].data[n]
+
+                for n in range(len(tempCoordSum)):
+
+                    tempCoordSum[n] = tempCoordSum[n] / float(tempNodeCount)
+
+                for m in range(len(resultSet.values)):
+
+                    if resultSet.values[m].elementLabel == elementSet.elements[i].label:
+
+                        if includePE:
+
+                            try: unsortedResults.append([elementSet.elements[i].label] + tempCoordSum.tolist() + resultSet.values[m].data.tolist() + resultPE.values[m].data.tolist() )
+                            except AttributeError: unsortedResults.append([elementSet.elements[i].label] + tempCoordSum.tolist() + [resultSet.values[m].data] + [normDpSet[m]] + resultPE.values[m].data.tolist() )
+
+                        else:
+
+                            try: unsortedResults.append([elementSet.elements[i].label] + tempCoordSum.tolist() + resultSet.values[m].data.tolist())
+                            except AttributeError: unsortedResults.append([elementSet.elements[i].label] + tempCoordSum.tolist() + [resultSet.values[m].data] + [normDpSet[m]])
+
+        if sortedResults: finalResults = sorted(unsortedResults, key=lambda unsortedResults: unsortedResults[abs(sortDirection)], reverse=reverse)
+        else: finalResults = unsortedResults
+
+        #for i in range(len(finalResults)): print(finalResults[i])
+
+        if writeCSV:
+
+            if resultName.startswith('CNORMF'): resultName = 'CNORMF'
+            if resultName.startswith('CSHEARF'): resultName = 'CSHEARF'
+
+            resCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + resultName + '_' + stepName + '_' + instanceName + '-' + setName + '.csv')
+
+            print('Writing CSV File: %s\n\n\n' %(resCSVname))
+
+            tempFile = open(resCSVname, 'wb')
+
+            with open(resCSVname, 'wb') as tempFile:
+
+                csvWriter = csv.writer(tempFile)
+
+                csvWriter.writerow(titleRow)
+
+                for i in range(len(finalResults)):
+
+                    csvWriter.writerow(finalResults[i])
+
+        return(finalResults)
+
+    #-----------------------------------------------------------------------
+
+    def UnsortedResultsZone_Deprecated(self,*args,**kwargs):
 
         stepName = kwargs.get('stepName', 'Initial')
         frameNumber = kwargs.get('frameNumber', -1)
@@ -2937,8 +3337,6 @@ class Indentation_Output(General_Output):
         unsortedResultSet = []
 
         #-----------------------------------------------------------------------
-
-        from numpy import zeros
 
         print('Running Unsorted Results Routine:')
         print('  Part Instance: %s , elementSet: %s' %(instanceName, setName))
@@ -3021,7 +3419,7 @@ class Indentation_Output(General_Output):
 
                 return(1)
 
-        # for result in customResults: print result
+        # for result in customResults: print(result)
 
         #-----------------------------------------------------------------------
 
@@ -3031,7 +3429,7 @@ class Indentation_Output(General_Output):
 
             coordSetNodes.append(coordSet.values[i].nodeLabel)
 
-        # print coordSetNodes
+        # print(coordSetNodes)
 
         #-----------------------------------------------------------------------
 
@@ -3041,7 +3439,7 @@ class Indentation_Output(General_Output):
 
             tempNodeCount = 0
 
-            tempCoordSum = zeros(len(coordSet.values[0].data))
+            tempCoordSum = np.zeros(len(coordSet.values[0].data))
 
             for j in range(len(customResults[i][1])):
 
@@ -3063,8 +3461,6 @@ class Indentation_Output(General_Output):
 
         if writeCSV:
 
-            import csv
-
             resCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + resultName + '_' + 'ResultsZone' + '_' + ('%1.0E'%(limitPE)).rstrip('0').rstrip('.') + '_' + stepName + '.csv')
 
             print('Writing CSV File: %s\n\n\n' %(resCSVname))
@@ -3084,210 +3480,6 @@ class Indentation_Output(General_Output):
                     csvWriter.writerow(unsortedResults[i])
 
         return(unsortedResults)
-
-    #-----------------------------------------------------------------------
-
-    def DensityGeneralResults(self,*args,**kwargs):
-
-        sortedResults = kwargs.get('sortedResults', False)
-        sortDirection = kwargs.get('sortDirection', 1)
-        stepName = kwargs.get('stepName', 'Initial')
-        frameNumber = kwargs.get('frameNumber', -1)
-        instanceName = kwargs.get('instanceName', None)
-        setName = kwargs.get('setName', None)
-        resultName = kwargs.get('resultName', 'COORD')
-        specialLocation = kwargs.get('specialLocation', None)
-        includePE =  kwargs.get('includePE', False)
-        writeCSV = kwargs.get('writeCSV', True)
-
-        import numpy as np
-
-        if sortDirection > 0: reverse = False
-        elif sortDirection < 0: reverse = True
-
-        try: self.odb.steps[stepName].frames[frameNumber].frameId
-        except: return(1)
-
-        frameId = self.odb.steps[stepName].frames[frameNumber].frameId
-
-        unsortedResultSet = []
-
-        #-----------------------------------------------------------------------
-
-        # print self.odb.steps[stepName].frames[frameNumber].fieldOutputs.keys()
-
-        try: self.odb.steps[stepName].frames[frameNumber].fieldOutputs[resultName].values[0].nodeLabel
-        except: return(1)
-
-        if self.odb.steps[stepName].frames[frameNumber].fieldOutputs[resultName].values[0].nodeLabel:
-
-            print('Running Sorting Routine:')
-            print('  Part Instance: %s , nodeSet: %s' %(instanceName, setName))
-            print('  Step Name: %s , Frame Index: %s, Frame Id: %s' %(stepName,frameNumber,frameId))
-            print('  Data Key: %s , Sort Direciton: %s\n' %(resultName, sortDirection))
-
-            nodeSet = self.odb.rootAssembly.instances[instanceName].nodeSets[setName]
-
-            coordSet = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['COORD'].getSubset(region=nodeSet)
-
-            resultSet = self.odb.steps[stepName].frames[frameNumber].fieldOutputs[resultName].getSubset(region=nodeSet)
-
-            calculatedSet = []
-
-            if includePE:
-
-                resultPE = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['PE'].getSubset(region=elementSet)
-
-                titleRow = ['nodeLabel'] + list(coordSet.componentLabels) + list(resultSet.componentLabels) + [resultPE.name]
-
-            else:
-
-                titleRow = ['nodeLabel'] + list(coordSet.componentLabels) + list(resultSet.componentLabels)
-
-            #for i in range(len(nodeSet.nodes)): print('%s, %s, %s' %(nodeSet.nodes[i].label,coordSet.values[i].nodeLabel,resultSet.values[i].nodeLabel))
-
-            unsortedResults = []
-
-            for i in range(len(nodeSet.nodes)):
-
-                if includePE:
-
-                    unsortedResults.append([nodeSet.nodes[i].label] + coordSet.values[i].data.tolist() + resultSet.values[i].data.tolist() + resultPE.values[i].data.tolist())
-
-                else:
-
-                    unsortedResults.append([nodeSet.nodes[i].label] + coordSet.values[i].data.tolist() + resultSet.values[i].data.tolist())
-
-        elif self.odb.steps[stepName].frames[frameNumber].fieldOutputs[resultName].values[0].elementLabel:
-
-            from numpy import zeros
-
-            print('Running Sorting Routine:')
-            print('  Part Instance: %s , elementSet: %s' %(instanceName, setName))
-            print('  Step Name: %s , Frame Index: %s, Frame Id: %s' %(stepName,frameNumber,frameId))
-            print('  Data Key: %s , Sort Direciton: %s\n' %(resultName, sortDirection))
-
-            nodeSet = self.odb.rootAssembly.instances[instanceName].nodeSets[setName]
-
-            elementSet = self.odb.rootAssembly.instances[instanceName].elementSets[setName]
-
-            coordSet = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['COORD'].getSubset(region=nodeSet)
-
-            if specialLocation is not None: resultSet = self.odb.steps[stepName].frames[frameNumber].fieldOutputs[resultName].getSubset(region=elementSet,position=specialLocation)
-            else: resultSet = self.odb.steps[stepName].frames[frameNumber].fieldOutputs[resultName].getSubset(region=elementSet)
-
-            if includePE:
-
-                if specialLocation is not None: resultPE = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['PE'].getSubset(region=elementSet,position=specialLocation)
-                else: resultPE = self.odb.steps[stepName].frames[frameNumber].fieldOutputs['PE'].getSubset(region=elementSet)
-
-                if resultSet.componentLabels: titleRow = ['elementLabel'] + list(coordSet.componentLabels) + list(resultSet.componentLabels) + list(resultPE.componentLabels)
-                else: titleRow = ['elementLabel'] + list(coordSet.componentLabels) + [resultSet.name] + ['normDp']+ list(resultPE.componentLabels)
-
-            else:
-
-                if resultSet.componentLabels: titleRow = ['elementLabel'] + list(coordSet.componentLabels) + list(resultSet.componentLabels)
-                else: titleRow = ['elementLabel'] + list(coordSet.componentLabels) + [resultSet.name] + ['normDp']
-
-            # for result in resultSet.values: print result.data
-
-            #Normalized Change in Density Calculations
-
-            if resultName == 'RD' or resultName == 'DENSITY':
-
-                initialRD = self.odb.steps['Loading'].frames[0].fieldOutputs[resultName].getSubset(region=elementSet).values[0].data
-
-                # print initialRD
-
-                normDpSet = []
-
-                for result in resultSet.values:
-
-                    normDpSet.append((result.data-initialRD)/initialRD)
-
-            elif resultName == 'PEQC4':
-
-                normDpSet = []
-
-                for result in resultSet.values:
-
-                    normDpSet.append(np.exp(-result.data) - 1.0)
-
-            #print resultSet.values[0]
-
-            coordSetNodes = []
-
-            for i in range(len(coordSet.values)):
-
-                coordSetNodes.append(coordSet.values[i].nodeLabel)
-
-            #print coordSetNodes
-
-            unsortedResults = []
-
-            for i in range(len(elementSet.elements)):
-
-                tempNodeCount = 0
-
-                tempCoordSum = zeros(len(coordSet.values[0].data))
-
-                for j in range(len(elementSet.elements[i].connectivity)):
-
-                    if elementSet.elements[i].connectivity[j] in coordSetNodes:
-
-                        tempNodeCount += 1
-
-                        for n in range(len(tempCoordSum)):
-
-                            tempCoordSum[n] += coordSet.values[coordSetNodes.index(elementSet.elements[i].connectivity[j])].data[n]
-
-                for n in range(len(tempCoordSum)):
-
-                    tempCoordSum[n] = tempCoordSum[n] / float(tempNodeCount)
-
-                for m in range(len(resultSet.values)):
-
-                    if resultSet.values[m].elementLabel == elementSet.elements[i].label:
-
-                        if includePE:
-
-                            try: unsortedResults.append([elementSet.elements[i].label] + tempCoordSum.tolist() + resultSet.values[m].data.tolist() + resultPE.values[m].data.tolist() )
-                            except AttributeError: unsortedResults.append([elementSet.elements[i].label] + tempCoordSum.tolist() + [resultSet.values[m].data] + [normDpSet[m]] + resultPE.values[m].data.tolist() )
-
-                        else:
-
-                            try: unsortedResults.append([elementSet.elements[i].label] + tempCoordSum.tolist() + resultSet.values[m].data.tolist())
-                            except AttributeError: unsortedResults.append([elementSet.elements[i].label] + tempCoordSum.tolist() + [resultSet.values[m].data] + [normDpSet[m]])
-
-        if sortedResults: finalResults = sorted(unsortedResults, key=lambda unsortedResults: unsortedResults[abs(sortDirection)], reverse=reverse)
-        else: finalResults = unsortedResults
-
-        #for i in range(len(finalResults)): print finalResults[i]
-
-        if writeCSV:
-
-            import csv
-
-            if resultName.startswith('CNORMF'): resultName = 'CNORMF'
-            if resultName.startswith('CSHEARF'): resultName = 'CSHEARF'
-
-            resCSVname = self.odb.path.split('\\')[-1].split('/')[-1].replace('.odb', '_' + resultName + '_' + stepName + '_' + instanceName + '-' + setName + '.csv')
-
-            print('Writing CSV File: %s\n\n\n' %(resCSVname))
-
-            tempFile = open(resCSVname, 'wb')
-
-            with open(resCSVname, 'wb') as tempFile:
-
-                csvWriter = csv.writer(tempFile)
-
-                csvWriter.writerow(titleRow)
-
-                for i in range(len(finalResults)):
-
-                    csvWriter.writerow(finalResults[i])
-
-        return(finalResults)
 
     #-----------------------------------------------------------------------
 

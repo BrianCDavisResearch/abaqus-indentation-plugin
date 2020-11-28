@@ -1,10 +1,12 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #--------------------------------------------------------------------------------------------------
 # Copyright 2020 Brian C. Davis
 #--------------------------------------------------------------------------------------------------
 
-def default_system_units(*args,**kwargs):
+import imp, os, subprocess
+
+#-----------------------------------------------------------------------
+
+def default_system_units():
 
     print('\n\n')
     print('#------------------------------------------')
@@ -37,17 +39,16 @@ def results_script(outp):
     #Loading modules
     #-----------------------------------------------------------------------
     try: from abaqus import session
-    except: pass
-    finally: from abaqusConstants import CENTROID
+    except ImportError: pass
+    try: from abaqusConstants import CENTROID
+    except ImportError: pass
     #-----------------------------------------------------------------------
-    import imp, os
     importedLibrary = imp.load_source('Lib_Indenter_Combo', outp['moduleName'])
     #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
     clSetName = 'RESULTS_CL_SET'            #Depricated: 'RES_THETA0_SET'
     surfSetName = 'RESULTS_SURF_SET'        #Depricated: 'RES_THETA90_SET'
-    rfSetName = 'BASE_SET'                  #Depricated: 'RESULTS_RF_SET'
     #-----------------------------------------------------------------------
 
     #-----------------------------------------------------------------------
@@ -66,22 +67,17 @@ def results_script(outp):
 
         outp['odbFileNames'] = []
 
-    outp['indenterOutput'] = []             #Creates a list of ODB files (allows for requesting outputs from multiple ODBs)
+    outp['indenterOutput'] = []                                 # Creates a list of ODB files (opens all first, allowing for requesting outputs from multiple ODBs)
 
     for i in range(len(outp['odbFileNames'])):
 
         outp['indenterOutput'].append(importedLibrary.Indentation_Output(outp['odbFileNames'][i],readOnly=True))
-    #-----------------------------------------------------------------------
-
-    #-----------------------------------------------------------------------
-    for i in range(len(outp['indenterOutput'])):
 
         # #-----------------------------------------------------------------------
-        # #This line prints all the results keys for field outputs
-        # for key in outp['indenterOutput'][i].odb.steps[outp['indenterOutput'][i].odb.steps.keys()[-2]].frames[-1].fieldOutputs.keys(): print key
+        # #These lines print important imforation about the ODB file: step names and field output result keys
         # #-----------------------------------------------------------------------
-        # #This line prints the step names for output database processing
         # print('\nLoad Step Name: "%s", Unload Step Name: "%s"\n' %(outp['indenterOutput'][i].odb.steps.keys()[-2],outp['indenterOutput'][i].odb.steps.keys()[-1]))
+        # for key in outp['indenterOutput'][i].odb.steps[outp['indenterOutput'][i].odb.steps.keys()[-2]].frames[-1].fieldOutputs.keys(): print(key)
         # #-----------------------------------------------------------------------
 
         #-----------------------------------------------------------------------
@@ -89,17 +85,20 @@ def results_script(outp):
         #The errorFlag indicates whether or not the analyses finished and the full set of output scripts can be run (on a properly finished analysis)
         #-----------------------------------------------------------------------
 
-        if outp['indenterOutput'][i].odb.steps[outp['indenterOutput'][i].odb.steps.keys()[0]].procedure.endswith('EXPLICIT'):
+        errorFlag1 = outp['indenterOutput'][i].WorkForceDist(instanceNameRF=None,nodeSetNameRF='MSET-1',instanceNameU=None,nodeSetNameU='MSET-1',fileNameSuffix='_Ind')
+        errorFlag2 = outp['indenterOutput'][i].WorkForceDist(instanceNameRF='TEST_ARTICLE-1',nodeSetNameRF='BASE_SET',instanceNameU=None,nodeSetNameU='MSET-1',fileNameSuffix='_Base')
 
-            errorFlag = outp['indenterOutput'][i].WorkForceDist(instanceNameRF=None,nodeSetNameRF='MSET-1',instanceNameU=None,nodeSetNameU='MSET-1',fileNameSuffix='_Ind')
+        # if outp['indenterOutput'][i].odb.steps[outp['indenterOutput'][i].odb.steps.keys()[0]].procedure.endswith('EXPLICIT'):
 
-        else:
+        #     errorFlag = outp['indenterOutput'][i].WorkForceDist(instanceNameRF=None,nodeSetNameRF='MSET-1',instanceNameU=None,nodeSetNameU='MSET-1',fileNameSuffix='_Ind')
 
-            errorFlag = outp['indenterOutput'][i].WorkForceDist(instanceNameRF='TEST_ARTICLE-1',nodeSetNameRF='BASE_SET',instanceNameU=None,nodeSetNameU='MSET-1',fileNameSuffix='_Base')
+        # else:
+
+        #     errorFlag = outp['indenterOutput'][i].WorkForceDist(instanceNameRF='TEST_ARTICLE-1',nodeSetNameRF='BASE_SET',instanceNameU=None,nodeSetNameU='MSET-1',fileNameSuffix='_Base')
 
         #-----------------------------------------------------------------------
 
-        if not errorFlag and not outp['odbFileNames'][i].endswith('_pre.odb'):
+        if (not errorFlag1) and (not errorFlag2) and (not outp['odbFileNames'][i].endswith('_pre.odb')):
 
             #-----------------------------------------------------------------------
             # The following class methods are the "basic" csv outputs of indentation
@@ -149,12 +148,19 @@ def results_script(outp):
             if outp['boolDensity']:
 
                 if 'RD' in outp['indenterOutput'][i].odb.steps[outp['indenterOutput'][i].odb.steps.keys()[-2]].frames[-1].fieldOutputs.keys():
+
                     densityResult = 'RD'
+
                 elif 'DENSITY' in outp['indenterOutput'][i].odb.steps[outp['indenterOutput'][i].odb.steps.keys()[-2]].frames[-1].fieldOutputs.keys():
+
                     densityResult = 'DENSITY'
+
                 elif 'PEQC4' in outp['indenterOutput'][i].odb.steps[outp['indenterOutput'][i].odb.steps.keys()[-2]].frames[-1].fieldOutputs.keys():
+
                     densityResult = 'PEQC4'
+
                 else:
+
                     densityResult = None
 
                 if densityResult is not None:
@@ -184,7 +190,7 @@ def results_script(outp):
 
             if outp['boolAreaS22']:
 
-                # This outputs Stress Components which have a max absolute PE strain below a specified limit (it is useful for finding a max. S22 outside the center-line and surface)
+                 # This outputs Stress Components which have a max absolute PE strain below a specified limit (it is useful for finding a max. S22 outside the center-line and surface)
                 outp['indenterOutput'][i].UnsortedResultsZone(stepName=outp['indenterOutput'][i].odb.steps.keys()[-1],frameNumber=-1,instanceName='TEST_ARTICLE-1',setName='MAT_PLASTIC_SET', resultName='S22', limitResult=outp['boolAreaS22limit'], limitTypeResult='lower', specialLocation=CENTROID, limitPE=outp['boolAreaS22limitPE'], limitType='upper', writeCSV=True)
 
             if outp['boolAreaPlastic']:
@@ -200,25 +206,35 @@ def results_script(outp):
 
             print('\n\nSkipping full processing of either "pre-analysis" or incomplete analysis, odb:\n     %s\n\n' %(outp['odbFileNames'][i]))
 
-    del outp['indenterOutput']
-
-    if outp['closeODBool']:
-
-        for odbFile in outp['odbFileNames']:
+        if outp['closeODBool']:
 
             try:
 
-                session.odbs[odbFile].close()
+                session.odbs[outp['odbFileNames'][i]].close()
 
-            except:
+            except UnboundLocalError:
 
-                print('Failed to close odb file: %s'%(odbFile))
+                try:
+
+                    outp['indenterOutput'][i].odb.close()
+
+                except Exception:
+
+                    print('Failed to close odb file: %s'%(outp['odbFileNames'][i]))
+
+    del outp['indenterOutput']
 
     if outp['odbPath'][0] == outp['remoteLocalDir']:
 
-        from subprocess import call
+        psCommand = 'python ' + r'C:\Abaqus\Module_AbaqusShell_Commands.py ' '--MioLocalSort'
 
-        call(['python', outp['remoteSortingScript']])
+        print('\n\n Running powershell command: "%s"\n\n' %(psCommand))
+
+        psProcess = subprocess.Popen(['powershell.exe', '-Command', psCommand], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        psOutput = psProcess.communicate()[0]
+
+        print(psOutput.decode('ascii'))
 
     print('\n\n...Completed Abaqus Python Script: Sharp Indentation Results.\n\n')
 
@@ -226,11 +242,9 @@ def results_script(outp):
 
 #-----------------------------------------------------------------------
 
-def plugin_prescript(*args,**kwargs):
+def plugin_prescript(**kwargs):
 
     print('\n\nRunning Abaqus Plugin: Sharp Indentation Results...\n')
-
-    import os
 
     #-----------------------------------------------------------------------
 
@@ -263,7 +277,6 @@ def plugin_prescript(*args,**kwargs):
     outp['closeODBool'] = True
 
     outp['remoteLocalDir'] = None
-    outp['remoteSortingScript'] = None
 
     #-----------------------------------------------------------------------
     results_script(outp)

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #--------------------------------------------------------------------------------------------------
 # Copyright 2020 Brian C. Davis
 #--------------------------------------------------------------------------------------------------
@@ -33,7 +31,7 @@ class SharpIndentationModelDB(AFXDataDialog):
         vfModel_1 = FXVerticalFrame(hfModel_0, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
 
         gbModel_11 = FXGroupBox(vfModel_1, i18n.tr('Analysis Type'), opts=FRAME_GROOVE, x=0, y=0, w=0, h=0, pl=DEFAULT_SPACING, pr=DEFAULT_SPACING, pt=DEFAULT_SPACING, pb=DEFAULT_SPACING, hs=DEFAULT_SPACING, vs=DEFAULT_SPACING)
-        comboBox = AFXComboBox(gbModel_11, 0, 3, '', tgt=self.form.anType, sel=0, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
+        comboBox = AFXComboBox(gbModel_11, 0, 3, '', tgt=self.form.anSolverType, sel=0, opts=0, x=0, y=0, w=0, h=0, pl=DEFAULT_PAD, pr=DEFAULT_PAD, pt=DEFAULT_PAD, pb=DEFAULT_PAD)
         comboBox.appendItem('Standard - Static')
         comboBox.appendItem('Standard - Quasi-Static')
         comboBox.appendItem('Explicit - Mass Scaling')
@@ -248,7 +246,7 @@ class SharpIndentationModelDB(AFXDataDialog):
 
         #-----------------------------------------------------------------------
 
-        if self.form.anType.getValue() == 'Explicit - Mass Scaling':
+        if self.form.anSolverType.getValue() == 'Explicit - Mass Scaling':
 
             self.remesh0.enable()
             self.remesh1.enable()
