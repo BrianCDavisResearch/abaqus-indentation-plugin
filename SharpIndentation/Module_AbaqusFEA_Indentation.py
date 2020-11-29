@@ -2677,18 +2677,34 @@ class Indentation_Output(General_Output):
         #-----------------------------------------------------------------------
 
         #-----------------------------------------------------------------------
-        sortedCoordSet = self.GeneralResults(sortedResults=True,sortDirection=2,stepName='Unloading',instanceName='TEST_ARTICLE-1',setName='RESULTS_SURF_SET', resultName='COORD', writeCSV=False)
+        nodeSet = self.odb.rootAssembly.instances['TEST_ARTICLE-1'].nodeSets['RESULTS_SURF_SET']
 
-        for value in sortedCoordSet:
+        coordSet = self.odb.steps['Unloading'].frames[-1].fieldOutputs['COORD'].getSubset(region=nodeSet)
 
-            if value[0] == tempNode:
+        for value in coordSet.values:
 
-                normalVars['contactEdge_RemoveX'] = value[1]
+            if value.nodeLabel == tempNode:
+
+                normalVars['contactEdge_RemoveX'] = value.data.item(0)
 
                 break
 
         print('Remove X-dir; Contact Edge Location: %s\n' %(normalVars['contactEdge_RemoveX']))
         #-----------------------------------------------------------------------
+
+        # #-----------------------------------------------------------------------
+        # sortedCoordSet = self.GeneralResults(sortedResults=True,sortDirection=2,stepName='Unloading',instanceName='TEST_ARTICLE-1',setName='RESULTS_SURF_SET', resultName='COORD', writeCSV=False)
+
+        # for value in sortedCoordSet:
+
+        #     if value[0] == tempNode:
+
+        #         normalVars['contactEdge_RemoveX'] = value[1]
+
+        #         break
+
+        # print('Remove X-dir; Contact Edge Location: %s\n' %(normalVars['contactEdge_RemoveX']))
+        # #-----------------------------------------------------------------------
 
         #-----------------------------------------------------------------------
         try: normalVars['plasticZoneHeight_IndentY'] = normalVars['plasticEdge_IndentY'] - normalVars['indentDepth_IndentY']
